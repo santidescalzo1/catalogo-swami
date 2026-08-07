@@ -3,8 +3,20 @@
 -- logueados (el panel /admin). SELECT tiene una unica policy que la gobierna, sin
 -- ambiguedad con las policies de escritura (evita el 403 que ve un usuario autenticado
 -- cuando una policy "for all" tambien pisa el SELECT).
+--
+-- Las policies de RLS solo restringen FILAS; antes de eso Postgres exige un GRANT de
+-- tabla para el rol. Si estas tablas se crearon pensando solo en el catalogo publico,
+-- es probable que el rol "authenticated" nunca haya tenido GRANT SELECT (solo "anon"),
+-- lo que produce un 403 para cualquier usuario logueado sin importar las policies.
+-- Por eso el script otorga los GRANTs explicitamente antes de tocar RLS.
+--
 -- Idempotente: borra cualquier policy existente en estas tablas antes de recrear,
 -- incluyendo las que se hayan creado a mano desde el dashboard.
+
+grant usage on schema public to anon, authenticated;
+
+grant select on public.articulos, public.marcas, public.rubros to anon, authenticated;
+grant insert, update, delete on public.articulos, public.marcas, public.rubros to authenticated;
 
 do $$
 declare pol record;
