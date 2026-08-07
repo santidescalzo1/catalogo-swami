@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import * as XLSX from 'xlsx'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 
 interface FilaCategoria {
   ID: number;
@@ -24,10 +25,17 @@ interface FilaArticulo {
 }
 
 export default function Home() {
+  const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [status, setStatus] = useState<string>('')
   const [progress, setProgress] = useState<string>('')
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/admin/login')
+    router.refresh()
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -122,9 +130,15 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-black text-zinc-300 flex flex-col items-center justify-center p-6 font-sans">
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
+        <div className="text-center relative">
           <h1 className="text-3xl font-light tracking-tight text-white mb-2">Swami Autopartes</h1>
           <p className="text-sm text-zinc-500 uppercase tracking-widest">Panel de Sincronización</p>
+          <button
+            onClick={handleLogout}
+            className="absolute top-0 right-0 text-xs text-zinc-600 hover:text-orange-500 transition-colors uppercase tracking-widest"
+          >
+            Cerrar sesión
+          </button>
         </div>
         
         <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-lg shadow-2xl">
