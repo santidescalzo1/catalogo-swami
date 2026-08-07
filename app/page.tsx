@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase/client'
+
+const SUPABASE_STORAGE_URL = 'https://rhdxfpkrxeuymihhkyxo.supabase.co/storage/v1/object/public/repuestos'
 
 interface Articulo {
   id: number;
@@ -35,6 +38,7 @@ export default function CatalogoPublico() {
 
   const [paginaActual, setPaginaActual] = useState(1)
   const [totalRegistros, setTotalRegistros] = useState(0)
+  const [errorCarga, setErrorCarga] = useState(false)
   const porPagina = 24
 
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
@@ -49,6 +53,10 @@ export default function CatalogoPublico() {
     const guardado = localStorage.getItem('swami_carrito')
     if (guardado) {
       try {
+        // localStorage no existe en el servidor, así que esta lectura tiene
+        // que pasar por un efecto (no por un initializer de useState) para
+        // no romper la hidratación con un valor distinto al del server.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCarrito(JSON.parse(guardado))
       } catch {
         // carrito guardado corrupto, se ignora
@@ -66,16 +74,38 @@ export default function CatalogoPublico() {
 
   const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idRubro: string, pagina: number) => {
     setCargando(true)
-    
+    setErrorCarga(false)
+
     let query = supabase
       .from('articulos')
       .select('id, codigo, descripcion, codigo_proveedor, precio_1, marcas(descripcion), rubros(descripcion)', { count: 'exact' })
+      .gt('precio_1', 0)
 
-    if (termino.trim().length >= 2) {
-      const palabras = termino.trim().split(/\s+/)
-      palabras.forEach(palabra => {
-        query = query.or(`descripcion.ilike.%${palabra}%,codigo.ilike.%${palabra}%,codigo_proveedor.ilike.%${palabra}%`)
-      })
+    const limpio = termino.trim()
+    if (limpio.length >= 2) {
+      const palabras = limpio.split(/\s+/)
+
+      if (palabras.length === 1) {
+        // Una sola palabra: además de buscarla tal cual, la comparamos sin
+        // espacios/signos contra una columna normalizada. Cubre el caso
+        // "cubrevolantes" (pegado) contra un artículo cargado como
+        // "CUBRE VOLANTE" (separado). Va todo en un único or() para que sean
+        // alternativas entre sí, no condiciones que se exijan todas juntas.
+        const normalizado = limpio.toLowerCase().replace(/[^a-z0-9áéíóúñ]/gi, '')
+        const alternativas = [
+          `descripcion.ilike.%${limpio}%`,
+          `codigo.ilike.%${limpio}%`,
+          `codigo_proveedor.ilike.%${limpio}%`,
+        ]
+        if (normalizado.length >= 2) {
+          alternativas.push(`descripcion_normalizada.ilike.%${normalizado}%`)
+        }
+        query = query.or(alternativas.join(','))
+      } else {
+        palabras.forEach(palabra => {
+          query = query.or(`descripcion.ilike.%${palabra}%,codigo.ilike.%${palabra}%,codigo_proveedor.ilike.%${palabra}%`)
+        })
+      }
     }
 
     if (idMarca) query = query.eq('id_marca', idMarca)
@@ -84,10 +114,16 @@ export default function CatalogoPublico() {
     const desde = (pagina - 1) * porPagina
     const hasta = desde + porPagina - 1
 
-    const { data, count } = await query.range(desde, hasta)
+    const { data, count, error } = await query.range(desde, hasta)
 
-    if (data) setRepuestos(data as unknown as Articulo[])
-    setTotalRegistros(count || 0)
+    if (error) {
+      setErrorCarga(true)
+      setRepuestos([])
+      setTotalRegistros(0)
+    } else {
+      setRepuestos((data ?? []) as unknown as Articulo[])
+      setTotalRegistros(count || 0)
+    }
     setCargando(false)
   }, [])
 
@@ -189,7 +225,7 @@ export default function CatalogoPublico() {
             {/* Título y Logo */}
             <div className="flex items-center justify-between w-full md:w-auto gap-4">
               <div className="flex items-center gap-4">
-                <img src="/logo.png" alt="Swami Logo" className="h-14 w-auto object-contain drop-shadow-[0_0_15px_rgba(249,115,22,0.1)]" />
+                <Image src="/logo.png" alt="Swami Logo" width={500} height={500} priority className="h-14 w-auto object-contain drop-shadow-[0_0_15px_rgba(249,115,22,0.1)]" />
                 <div className="hidden md:flex flex-col justify-center">
                   <h1 className="text-xl font-light tracking-[0.2em] text-white uppercase leading-tight">
                     Swami
@@ -274,8 +310,20 @@ export default function CatalogoPublico() {
         </div>
 
         {cargando ? (
-          <div className="flex justify-center items-center py-32">
-            <div className="text-xs text-orange-500/70 uppercase tracking-[0.2em] animate-pulse">Sincronizando catálogo...</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: porPagina }).map((_, i) => (
+              <div key={i} className="border border-zinc-900 bg-zinc-950/30 p-5 animate-pulse">
+                <div className="aspect-square w-full bg-zinc-900/60 mb-5" />
+                <div className="h-2 w-1/3 bg-zinc-900/60 mb-3" />
+                <div className="h-3 w-full bg-zinc-900/60 mb-2" />
+                <div className="h-3 w-2/3 bg-zinc-900/60 mb-4" />
+                <div className="h-5 w-1/2 bg-zinc-900/60" />
+              </div>
+            ))}
+          </div>
+        ) : errorCarga ? (
+          <div className="text-center py-32 text-zinc-600 font-light tracking-wide">
+            No pudimos cargar el catálogo. Revisá tu conexión y volvé a intentar.
           </div>
         ) : repuestos.length === 0 ? (
           <div className="text-center py-32 text-zinc-600 font-light tracking-wide">No se encontraron resultados para tu búsqueda.</div>
@@ -290,11 +338,13 @@ export default function CatalogoPublico() {
                 >
                   <div>
                     {/* Contenedor de Imagen con URL Dinámica Supabase */}
-                    <div className="aspect-square w-full bg-black border border-zinc-900 mb-5 flex items-center justify-center overflow-hidden group-hover:border-orange-500/20 transition-colors">
-                      <img 
-                        src={`https://rhdxfpkrxeuymihhkyxo.supabase.co/storage/v1/object/public/repuestos/${item.codigo}.jpg`} 
-                        alt={item.descripcion} 
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                    <div className="relative aspect-square w-full bg-black border border-zinc-900 mb-5 flex items-center justify-center overflow-hidden group-hover:border-orange-500/20 transition-colors">
+                      <Image
+                        src={`${SUPABASE_STORAGE_URL}/${item.codigo}.jpg`}
+                        alt={item.descripcion}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                           e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -374,10 +424,12 @@ export default function CatalogoPublico() {
             
             {/* Mitad Imagen */}
             <div className="w-full md:w-1/2 bg-black border-b md:border-b-0 md:border-r border-zinc-900 aspect-square md:aspect-auto flex items-center justify-center relative p-8">
-              <img 
-                src={`https://rhdxfpkrxeuymihhkyxo.supabase.co/storage/v1/object/public/repuestos/${articuloSeleccionado.codigo}.jpg`} 
-                alt={articuloSeleccionado.descripcion} 
-                className="max-w-full max-h-full object-contain"
+              <Image
+                src={`${SUPABASE_STORAGE_URL}/${articuloSeleccionado.codigo}.jpg`}
+                alt={articuloSeleccionado.descripcion}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   e.currentTarget.nextElementSibling?.classList.remove('hidden');
