@@ -1,25 +1,40 @@
--- Ejecutar una sola vez en el SQL Editor del dashboard de Supabase.
--- Objetivo: lectura pública del catálogo, escritura solo para usuarios autenticados (el admin).
--- Idempotente: puede correrse más de una vez sin duplicar policies.
+-- Ejecutar en el SQL Editor del dashboard de Supabase.
+-- Objetivo: lectura publica del catalogo (sin excepciones), escritura solo para usuarios
+-- logueados (el panel /admin). SELECT tiene una unica policy que la gobierna, sin
+-- ambiguedad con las policies de escritura (evita el 403 que ve un usuario autenticado
+-- cuando una policy "for all" tambien pisa el SELECT).
+-- Idempotente: borra cualquier policy existente en estas tablas antes de recrear,
+-- incluyendo las que se hayan creado a mano desde el dashboard.
 
-alter table articulos enable row level security;
-alter table marcas enable row level security;
-alter table rubros enable row level security;
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname, tablename from pg_policies
+    where schemaname = 'public' and tablename in ('articulos', 'marcas', 'rubros')
+  loop
+    execute format('drop policy if exists %I on public.%I', pol.policyname, pol.tablename);
+  end loop;
+end $$;
 
-drop policy if exists "Lectura publica" on articulos;
-drop policy if exists "Lectura publica" on marcas;
-drop policy if exists "Lectura publica" on rubros;
-drop policy if exists "Escritura solo admin" on articulos;
-drop policy if exists "Escritura solo admin" on marcas;
-drop policy if exists "Escritura solo admin" on rubros;
+alter table public.articulos enable row level security;
+alter table public.marcas    enable row level security;
+alter table public.rubros    enable row level security;
 
-create policy "Lectura publica" on articulos for select using (true);
-create policy "Lectura publica" on marcas for select using (true);
-create policy "Lectura publica" on rubros for select using (true);
+-- Lectura: publica, una sola policy por tabla, sin condiciones.
+create policy "lectura_publica" on public.articulos for select to public using (true);
+create policy "lectura_publica" on public.marcas    for select to public using (true);
+create policy "lectura_publica" on public.rubros    for select to public using (true);
 
-create policy "Escritura solo admin" on articulos for all
-  using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-create policy "Escritura solo admin" on marcas for all
-  using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-create policy "Escritura solo admin" on rubros for all
-  using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+-- Escritura: solo usuarios logueados (auth.uid() existe), una policy por operacion.
+create policy "escritura_admin_insert" on public.articulos for insert to authenticated with check (true);
+create policy "escritura_admin_update" on public.articulos for update to authenticated using (true) with check (true);
+create policy "escritura_admin_delete" on public.articulos for delete to authenticated using (true);
+
+create policy "escritura_admin_insert" on public.marcas for insert to authenticated with check (true);
+create policy "escritura_admin_update" on public.marcas for update to authenticated using (true) with check (true);
+create policy "escritura_admin_delete" on public.marcas for delete to authenticated using (true);
+
+create policy "escritura_admin_insert" on public.rubros for insert to authenticated with check (true);
+create policy "escritura_admin_update" on public.rubros for update to authenticated using (true) with check (true);
+create policy "escritura_admin_delete" on public.rubros for delete to authenticated using (true);
