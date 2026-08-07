@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 
 interface Articulo {
@@ -39,8 +39,30 @@ export default function CatalogoPublico() {
 
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
   const [mostrarCarrito, setMostrarCarrito] = useState(false)
-  
+  const primerRenderCarrito = useRef(true)
+
   const [articuloSeleccionado, setArticuloSeleccionado] = useState<Articulo | null>(null)
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const guardado = localStorage.getItem('swami_carrito')
+    if (guardado) {
+      try {
+        setCarrito(JSON.parse(guardado))
+      } catch {
+        // carrito guardado corrupto, se ignora
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (primerRenderCarrito.current) {
+      primerRenderCarrito.current = false
+      return
+    }
+    localStorage.setItem('swami_carrito', JSON.stringify(carrito))
+  }, [carrito])
 
   const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idRubro: string, pagina: number) => {
     setCargando(true)
@@ -86,9 +108,13 @@ export default function CatalogoPublico() {
   const handleBusqueda = (val: string) => {
     setBusqueda(val)
     setPaginaActual(1)
-    if (val.length >= 2 || val.length === 0) {
-      aplicarFiltros(val, marcaFiltro, rubroFiltro, 1)
-    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      if (val.length >= 2 || val.length === 0) {
+        aplicarFiltros(val, marcaFiltro, rubroFiltro, 1)
+      }
+    }, 400)
   }
 
   const handleMarca = (val: string) => {
