@@ -46,6 +46,7 @@ export default function CatalogoPublico() {
   const primerRenderCarrito = useRef(true)
 
   const [articuloSeleccionado, setArticuloSeleccionado] = useState<Articulo | null>(null)
+  const [vistaLista, setVistaLista] = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -164,6 +165,17 @@ export default function CatalogoPublico() {
     setPaginaActual(1)
     aplicarFiltros(busqueda, marcaFiltro, val, 1)
   }
+
+  const limpiarFiltros = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    setBusqueda('')
+    setMarcaFiltro('')
+    setRubroFiltro('')
+    setPaginaActual(1)
+    aplicarFiltros('', '', '', 1)
+  }
+
+  const hayFiltrosActivos = busqueda !== '' || marcaFiltro !== '' || rubroFiltro !== ''
 
   const cambiarPagina = (nuevaPagina: number) => {
     setPaginaActual(nuevaPagina)
@@ -298,6 +310,14 @@ export default function CatalogoPublico() {
                 <option key={r.id} value={r.id}>{r.descripcion}</option>
               ))}
             </select>
+
+            <button
+              onClick={limpiarFiltros}
+              disabled={!hayFiltrosActivos}
+              className="text-[11px] uppercase tracking-wider text-zinc-500 border border-zinc-800 px-4 py-2.5 hover:border-orange-500/50 hover:text-orange-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-zinc-800 disabled:hover:text-zinc-500 shrink-0"
+            >
+              Limpiar Filtros
+            </button>
           </div>
         </div>
       </header>
@@ -306,7 +326,25 @@ export default function CatalogoPublico() {
       <section className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex justify-between items-center mb-8 text-[10px] text-zinc-500 uppercase tracking-[0.2em]">
           <span>Inventario Swami</span>
-          <span>{totalRegistros} repuestos</span>
+          <div className="flex items-center gap-6">
+            <span>{totalRegistros} repuestos</span>
+            <div className="flex items-center gap-1 border border-zinc-800">
+              <button
+                onClick={() => setVistaLista(false)}
+                aria-label="Ver en grilla"
+                className={`p-2 transition-colors ${!vistaLista ? 'bg-zinc-900 text-orange-500' : 'text-zinc-600 hover:text-zinc-400'}`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" /></svg>
+              </button>
+              <button
+                onClick={() => setVistaLista(true)}
+                aria-label="Ver en lista"
+                className={`p-2 transition-colors ${vistaLista ? 'bg-zinc-900 text-orange-500' : 'text-zinc-600 hover:text-zinc-400'}`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         {cargando ? (
@@ -329,6 +367,60 @@ export default function CatalogoPublico() {
           <div className="text-center py-32 text-zinc-600 font-light tracking-wide">No se encontraron resultados para tu búsqueda.</div>
         ) : (
           <>
+            {vistaLista ? (
+            <div className="overflow-x-auto border border-zinc-900">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-zinc-900 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                    <th className="text-left font-normal px-4 py-3">Código</th>
+                    <th className="text-left font-normal px-4 py-3">Descripción</th>
+                    <th className="text-left font-normal px-4 py-3 hidden md:table-cell">Marca</th>
+                    <th className="text-left font-normal px-4 py-3 hidden md:table-cell">Rubro</th>
+                    <th className="text-right font-normal px-4 py-3">Precio</th>
+                    <th className="text-right font-normal px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {repuestos.map((item) => (
+                    <tr
+                      key={item.id}
+                      onClick={() => setArticuloSeleccionado(item)}
+                      className="border-b border-zinc-900 last:border-b-0 hover:bg-zinc-900/50 cursor-pointer transition-colors"
+                    >
+                      <td className="px-4 py-3 text-orange-500/80 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
+                      <td className="px-4 py-3 text-zinc-300 font-light">{item.descripcion}</td>
+                      <td className="px-4 py-3 text-zinc-500 text-[11px] uppercase tracking-wider hidden md:table-cell">
+                        {item.marcas?.descripcion && item.marcas.descripcion !== 'Sin Marca' ? item.marcas.descripcion : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-zinc-500 text-[11px] uppercase tracking-wider hidden md:table-cell">
+                        {item.rubros?.descripcion ?? '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-white font-light whitespace-nowrap">
+                        ${item.precio_1.toLocaleString('es-AR')}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setArticuloSeleccionado(item) }}
+                            aria-label="Ver detalle"
+                            className="p-2 text-zinc-500 hover:text-orange-500 transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                          </button>
+                          <button
+                            onClick={(e) => agregarAlCarrito(item, e)}
+                            className="text-[9px] uppercase tracking-[0.2em] font-medium text-zinc-300 bg-zinc-900 border border-zinc-800 hover:bg-orange-500 hover:text-black hover:border-orange-500 px-3 py-2 transition-all whitespace-nowrap"
+                          >
+                            Sumar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {repuestos.map((item) => (
                 <article 
@@ -384,6 +476,7 @@ export default function CatalogoPublico() {
                 </article>
               ))}
             </div>
+            )}
 
             {/* CONTROLES DE PAGINACIÓN */}
             {totalPaginas > 1 && (
