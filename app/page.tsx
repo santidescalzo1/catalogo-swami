@@ -26,13 +26,20 @@ interface Categoria {
   descripcion: string;
 }
 
+interface Rubro extends Categoria {
+  id_categoria_general: number | null;
+}
+
 export default function CatalogoPublico() {
   const [repuestos, setRepuestos] = useState<Articulo[]>([])
   const [marcas, setMarcas] = useState<Categoria[]>([])
-  const [rubros, setRubros] = useState<Categoria[]>([])
-  
+  const [rubros, setRubros] = useState<Rubro[]>([])
+  const [categoriasGenerales, setCategoriasGenerales] = useState<Categoria[]>([])
+  const rubrosRef = useRef<Rubro[]>([])
+
   const [busqueda, setBusqueda] = useState('')
   const [marcaFiltro, setMarcaFiltro] = useState<string>('')
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>('')
   const [rubroFiltro, setRubroFiltro] = useState<string>('')
   const [cargando, setCargando] = useState(true)
 
@@ -73,7 +80,7 @@ export default function CatalogoPublico() {
     localStorage.setItem('swami_carrito', JSON.stringify(carrito))
   }, [carrito])
 
-  const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idRubro: string, pagina: number) => {
+  const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idCategoria: string, idRubro: string, pagina: number) => {
     setCargando(true)
     setErrorCarga(false)
 
@@ -110,7 +117,15 @@ export default function CatalogoPublico() {
     }
 
     if (idMarca) query = query.eq('id_marca', idMarca)
-    if (idRubro) query = query.eq('id_rubro', idRubro)
+
+    if (idRubro) {
+      query = query.eq('id_rubro', idRubro)
+    } else if (idCategoria) {
+      const idsEnCategoria = rubrosRef.current
+        .filter(r => String(r.id_categoria_general) === idCategoria)
+        .map(r => r.id)
+      query = query.in('id_rubro', idsEnCategoria.length > 0 ? idsEnCategoria : [-1])
+    }
 
     const desde = (pagina - 1) * porPagina
     const hasta = desde + porPagina - 1
@@ -132,11 +147,16 @@ export default function CatalogoPublico() {
     const inicializarCatalogo = async () => {
       const { data: dataMarcas } = await supabase.from('marcas').select('*').order('descripcion')
       const { data: dataRubros } = await supabase.from('rubros').select('*').order('descripcion')
-      
-      if (dataMarcas) setMarcas(dataMarcas)
-      if (dataRubros) setRubros(dataRubros)
+      const { data: dataCategorias } = await supabase.from('categorias_generales').select('*').order('descripcion')
 
-      aplicarFiltros('', '', '', 1)
+      if (dataMarcas) setMarcas(dataMarcas)
+      if (dataRubros) {
+        setRubros(dataRubros)
+        rubrosRef.current = dataRubros
+      }
+      if (dataCategorias) setCategoriasGenerales(dataCategorias)
+
+      aplicarFiltros('', '', '', '', 1)
     }
 
     inicializarCatalogo()
@@ -149,7 +169,7 @@ export default function CatalogoPublico() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       if (val.length >= 2 || val.length === 0) {
-        aplicarFiltros(val, marcaFiltro, rubroFiltro, 1)
+        aplicarFiltros(val, marcaFiltro, categoriaFiltro, rubroFiltro, 1)
       }
     }, 400)
   }
@@ -157,29 +177,37 @@ export default function CatalogoPublico() {
   const handleMarca = (val: string) => {
     setMarcaFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busqueda, val, rubroFiltro, 1)
+    aplicarFiltros(busqueda, val, categoriaFiltro, rubroFiltro, 1)
+  }
+
+  const handleCategoria = (val: string) => {
+    setCategoriaFiltro(val)
+    setRubroFiltro('')
+    setPaginaActual(1)
+    aplicarFiltros(busqueda, marcaFiltro, val, '', 1)
   }
 
   const handleRubro = (val: string) => {
     setRubroFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busqueda, marcaFiltro, val, 1)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, val, 1)
   }
 
   const limpiarFiltros = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     setBusqueda('')
     setMarcaFiltro('')
+    setCategoriaFiltro('')
     setRubroFiltro('')
     setPaginaActual(1)
-    aplicarFiltros('', '', '', 1)
+    aplicarFiltros('', '', '', '', 1)
   }
 
-  const hayFiltrosActivos = busqueda !== '' || marcaFiltro !== '' || rubroFiltro !== ''
+  const hayFiltrosActivos = busqueda !== '' || marcaFiltro !== '' || categoriaFiltro !== '' || rubroFiltro !== ''
 
   const cambiarPagina = (nuevaPagina: number) => {
     setPaginaActual(nuevaPagina)
-    aplicarFiltros(busqueda, marcaFiltro, rubroFiltro, nuevaPagina)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, nuevaPagina)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -300,15 +328,29 @@ export default function CatalogoPublico() {
               ))}
             </select>
 
-            <select 
+            <select
+              value={categoriaFiltro}
+              onChange={(e) => handleCategoria(e.target.value)}
+              className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer flex-1 transition-all uppercase tracking-wider text-[11px]"
+            >
+              <option value="">Todas las Categorías</option>
+              {categoriasGenerales.map(c => (
+                <option key={c.id} value={c.id}>{c.descripcion}</option>
+              ))}
+            </select>
+
+            <select
               value={rubroFiltro}
               onChange={(e) => handleRubro(e.target.value)}
               className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer flex-1 transition-all uppercase tracking-wider text-[11px]"
             >
               <option value="">Todos los Rubros</option>
-              {rubros.filter(r => r.id !== 0).map(r => (
-                <option key={r.id} value={r.id}>{r.descripcion}</option>
-              ))}
+              {rubros
+                .filter(r => r.id !== 0)
+                .filter(r => !categoriaFiltro || String(r.id_categoria_general) === categoriaFiltro)
+                .map(r => (
+                  <option key={r.id} value={r.id}>{r.descripcion}</option>
+                ))}
             </select>
 
             <button
