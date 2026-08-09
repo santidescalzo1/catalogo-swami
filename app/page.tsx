@@ -317,46 +317,55 @@ export default function CatalogoPublico() {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 border-t border-zinc-900 pt-6">
-            <select 
-              value={marcaFiltro}
-              onChange={(e) => handleMarca(e.target.value)}
-              className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer flex-1 transition-all uppercase tracking-wider text-[11px]"
-            >
-              <option value="">Todas las Marcas</option>
-              {marcas.filter(m => m.id !== 0).map(m => (
-                <option key={m.id} value={m.id}>{m.descripcion}</option>
-              ))}
-            </select>
-
-            <select
-              value={categoriaFiltro}
-              onChange={(e) => handleCategoria(e.target.value)}
-              className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer flex-1 transition-all uppercase tracking-wider text-[11px]"
-            >
-              <option value="">Todas las Categorías</option>
-              {categoriasGenerales.map(c => (
-                <option key={c.id} value={c.id}>{c.descripcion}</option>
-              ))}
-            </select>
-
-            <select
-              value={rubroFiltro}
-              onChange={(e) => handleRubro(e.target.value)}
-              className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer flex-1 transition-all uppercase tracking-wider text-[11px]"
-            >
-              <option value="">Todos los Rubros</option>
-              {rubros
-                .filter(r => r.id !== 0)
-                .filter(r => !categoriaFiltro || String(r.id_categoria_general) === categoriaFiltro)
-                .map(r => (
-                  <option key={r.id} value={r.id}>{r.descripcion}</option>
+            <div className="flex-1 flex flex-col gap-1.5">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Marca</span>
+              <select
+                value={marcaFiltro}
+                onChange={(e) => handleMarca(e.target.value)}
+                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+              >
+                <option value="">Todos</option>
+                {marcas.filter(m => m.id !== 0).map(m => (
+                  <option key={m.id} value={m.id}>{m.descripcion}</option>
                 ))}
-            </select>
+              </select>
+            </div>
+
+            <div className="flex-1 flex flex-col gap-1.5">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Rubro</span>
+              <select
+                value={categoriaFiltro}
+                onChange={(e) => handleCategoria(e.target.value)}
+                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+              >
+                <option value="">Todos</option>
+                {categoriasGenerales.map(c => (
+                  <option key={c.id} value={c.id}>{c.descripcion}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 flex flex-col gap-1.5">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Subrubro</span>
+              <select
+                value={rubroFiltro}
+                onChange={(e) => handleRubro(e.target.value)}
+                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+              >
+                <option value="">Todos</option>
+                {rubros
+                  .filter(r => r.id !== 0)
+                  .filter(r => !categoriaFiltro || String(r.id_categoria_general) === categoriaFiltro)
+                  .map(r => (
+                    <option key={r.id} value={r.id}>{r.descripcion}</option>
+                  ))}
+              </select>
+            </div>
 
             <button
               onClick={limpiarFiltros}
               disabled={!hayFiltrosActivos}
-              className="text-[11px] uppercase tracking-wider text-zinc-500 border border-zinc-800 px-4 py-2.5 hover:border-orange-500/50 hover:text-orange-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-zinc-800 disabled:hover:text-zinc-500 shrink-0"
+              className="text-[11px] uppercase tracking-wider text-zinc-500 border border-zinc-800 px-4 py-2.5 hover:border-orange-500/50 hover:text-orange-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-zinc-800 disabled:hover:text-zinc-500 shrink-0 self-end"
             >
               Limpiar Filtros
             </button>
