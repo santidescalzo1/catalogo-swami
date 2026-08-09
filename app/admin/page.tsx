@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as XLSX from 'xlsx'
 import { supabase } from '@/lib/supabase/client'
@@ -140,7 +141,14 @@ export default function Home() {
             Cerrar sesión
           </button>
         </div>
-        
+
+        <Link
+          href="/admin/articulos"
+          className="block text-center text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest border border-zinc-800 hover:border-orange-500/50 py-3 transition-colors"
+        >
+          Editar artículos individuales →
+        </Link>
+
         <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-lg shadow-2xl">
           <label className="block text-sm font-medium text-zinc-400 mb-4">
             Importar lista de precios definitiva
