@@ -131,9 +131,19 @@ export default function EditarArticulos() {
       const codigoNuevo = articuloEditando.codigo.trim()
 
       if (archivoImagen) {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) throw new Error('No hay sesión activa. Volvé a loguearte e intentá de nuevo.')
+
         const { error: errorSubida } = await supabase.storage
           .from('repuestos')
-          .upload(`${codigoNuevo}.jpg`, archivoImagen, { upsert: true, contentType: archivoImagen.type || 'image/jpeg' })
+          .upload(`${codigoNuevo}.jpg`, archivoImagen, {
+            upsert: true,
+            contentType: archivoImagen.type || 'image/jpeg',
+            // Fuerza el token de sesión en vez de confiar en que el cliente
+            // de Storage lo agregue solo: descarta de raíz que el 403 de RLS
+            // sea por mandar la anon key en vez del JWT del usuario logueado.
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          })
         if (errorSubida) throw errorSubida
       } else if (codigoNuevo !== codigoOriginal) {
         // Si cambió el código y no se subió una foto nueva, movemos la foto
