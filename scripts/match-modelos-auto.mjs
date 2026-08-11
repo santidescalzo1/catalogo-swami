@@ -28,12 +28,12 @@ const supabase = createClient(
 
 const TAXONOMIA = [
   { marca: 'VW', alias: ['VW', 'VOLKSWAGEN'], modelos: ['Gol Trend', 'Gol', 'Amarok', 'Vento', 'Bora', 'Fox', 'Suran', 'Polo', 'Saveiro', 'Up!', 'Nivus', 'T-Cross', 'Taos', 'Constellation', 'Worker', 'Delivery'] },
-  { marca: 'Chevrolet', alias: ['CHEVROLET', 'CHEVY'], modelos: ['Corsa', 'Classic', 'Onix', 'Prisma', 'Cruze', 'S10', 'Tracker', 'Agile', 'Meriva', 'Spin', 'Aveo', 'Montana', 'Joy'] },
+  { marca: 'Chevrolet', alias: ['CHEVROLET', 'CHEVY', 'CHEV'], modelos: ['Corsa', 'Classic', 'Onix', 'Prisma', 'Cruze', 'S10', 'Tracker', 'Agile', 'Meriva', 'Spin', 'Aveo', 'Montana', 'Joy'] },
   { marca: 'Fiat', alias: ['FIAT'], modelos: ['Uno Fire', 'Palio', 'Siena', 'Uno', 'Cronos', 'Toro', 'Strada', 'Fiorino', 'Argo', 'Punto', 'Ducato', 'Mobi', 'Duna', 'Spazio'] },
   { marca: 'Ford', alias: ['FORD'], modelos: ['Fiesta Kinetic', 'Fiesta', 'Ka', 'Focus', 'Ranger', 'EcoSport', 'F-100', 'Transit', 'Mondeo', 'Escort', 'Falcon', 'Cargo 1722', 'Cargo 1932', 'F-4000', 'F-350'] },
-  { marca: 'Renault', alias: ['RENAULT'], modelos: ['Clio Mio', 'Clio', 'Kangoo', 'Sandero', 'Logan', 'Duster', 'Megane', 'Fluence', 'Oroch', 'Master', 'Stepway', 'R12', 'R19', 'R9'] },
-  { marca: 'Peugeot', alias: ['PEUGEOT'], modelos: ['207 Compact', '207', '206', '208', '307', '308', '408', 'Partner', '2008', '3008', '504'] },
-  { marca: 'Citroen', alias: ['CITROEN', 'CITROËN'], modelos: ['C4 Lounge', 'C4 Cactus', 'C4', 'C3', 'Berlingo', 'Picasso'] },
+  { marca: 'Renault', alias: ['RENAULT', 'REN'], modelos: ['Clio Mio', 'Clio', 'Kangoo', 'Sandero', 'Logan', 'Duster', 'Megane', 'Fluence', 'Oroch', 'Master', 'Stepway', 'R12', 'R19', 'R9'] },
+  { marca: 'Peugeot', alias: ['PEUGEOT', 'PEUG', 'PEU'], modelos: ['207 Compact', '207', '206', '208', '307', '308', '408', 'Partner', '2008', '3008', '504'] },
+  { marca: 'Citroen', alias: ['CITROEN', 'CITROËN', 'CITR'], modelos: ['C4 Lounge', 'C4 Cactus', 'C4', 'C3', 'Berlingo', 'Picasso'] },
   { marca: 'Toyota', alias: ['TOYOTA'], modelos: ['Hilux', 'Corolla', 'Etios', 'Yaris', 'SW4', 'RAV4'] },
   { marca: 'Honda', alias: ['HONDA'], modelos: ['Civic', 'Fit', 'HR-V', 'CR-V', 'City'] },
   { marca: 'Nissan', alias: ['NISSAN'], modelos: ['Frontier', 'March', 'Versa', 'Kicks', 'Sentra', 'Tiida'] },
@@ -105,8 +105,23 @@ function matchear(texto) {
   const resultados = []
   for (const marca of marcasCompiladas) {
     if (!marca.aliasRegex.some(r => r.test(t))) continue
-    const modeloEspecifico = marca.modelosOrdenados.find(m => m.regex.test(t))
-    resultados.push({ marca: marca.marca, modelo: modeloEspecifico ? modeloEspecifico.nombre : 'Genérico' })
+
+    // Es habitual que una descripcion liste varios modelos de la misma
+    // marca a la vez (ej. "CHEV. ONIX/PRISMA/COBALT/SPIN") porque
+    // comparten pieza - hay que taggear todos, no solo el primero.
+    // Pero un modelo "cubierto" por otro mas especifico que tambien
+    // matcheo (ej. "Gol" dentro de "Gol Trend") no se agrega aparte,
+    // para no duplicar la misma mencion como dos modelos distintos.
+    const candidatos = marca.modelosOrdenados.filter(m => m.regex.test(t))
+    const aceptados = candidatos.filter(c =>
+      !candidatos.some(o => o !== c && o.nombre.length > c.nombre.length && o.nombre.includes(c.nombre))
+    )
+
+    if (aceptados.length === 0) {
+      resultados.push({ marca: marca.marca, modelo: 'Genérico' })
+    } else {
+      for (const modelo of aceptados) resultados.push({ marca: marca.marca, modelo: modelo.nombre })
+    }
   }
   return resultados
 }
@@ -120,6 +135,7 @@ async function main() {
 
   const stats = new Map() // marca -> count
   const filas = [] // { codigo, marca, modelo }
+  const codigosConMarcaReal = [] // para limpiar el "Universal" viejo si quedo desactualizado
   const muestraConMatch = []
   const muestraUniversal = []
   const muestraMultiple = []
@@ -134,6 +150,8 @@ async function main() {
       if (muestraUniversal.length < 15) muestraUniversal.push(a.descripcion)
       continue
     }
+
+    codigosConMarcaReal.push(a.codigo)
 
     for (const m of matches) {
       filas.push({ codigo: a.codigo, marca: m.marca, modelo: m.modelo })
@@ -172,8 +190,25 @@ async function main() {
 
   // Genera el SQL candidato (no se corre solo, es para revisar/aprobar).
   const values = filas.map(f => `('${sqlQuote(f.codigo)}', '${sqlQuote(f.marca)}', '${sqlQuote(f.modelo)}')`).join(',\n  ')
+  const codigosValues = codigosConMarcaReal.map(c => `('${sqlQuote(c)}')`).join(',\n  ')
   const sql = `-- GENERADO por scripts/match-modelos-auto.mjs — revisar antes de correr.
 -- Requiere haber corrido antes supabase/marca-modelo-auto.sql.
+--
+-- Si ya se habia corrido una version anterior de este archivo, este bloque
+-- borra el "Universal / Generico" que le haya quedado pegado a un articulo
+-- que en esta corrida SI matcheo una marca real (ej. ajuste de alias que
+-- antes no reconocia "CHEV." como Chevrolet). Es un no-op inofensivo la
+-- primera vez que se corre.
+delete from public.articulos_modelos_auto amu
+using public.articulos a, public.modelos_auto mo, public.marcas_auto ma
+where amu.id_articulo = a.id
+  and amu.id_modelo_auto = mo.id
+  and mo.id_marca_auto = ma.id
+  and ma.descripcion = 'Universal'
+  and a.codigo in (
+  ${codigosValues}
+  );
+
 insert into public.articulos_modelos_auto (id_articulo, id_modelo_auto)
 select a.id, mo.id
 from (values
