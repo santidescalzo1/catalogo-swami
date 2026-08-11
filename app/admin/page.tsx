@@ -149,6 +149,13 @@ export default function Home() {
           Editar artículos individuales →
         </Link>
 
+        <Link
+          href="/admin/fotos"
+          className="block text-center text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest border border-zinc-800 hover:border-orange-500/50 py-3 transition-colors"
+        >
+          Subir fotos →
+        </Link>
+
         <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-lg shadow-2xl">
           <label className="block text-sm font-medium text-zinc-400 mb-4">
             Importar lista de precios definitiva
