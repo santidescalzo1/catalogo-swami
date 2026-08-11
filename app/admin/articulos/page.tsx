@@ -93,6 +93,10 @@ export default function EditarArticulos() {
   }, [])
 
   useEffect(() => {
+    // Carga inicial del listado completo: tiene que pasar por un efecto
+    // (no puede resolverse durante el render), y no hay ningún await previo
+    // que lo corra fuera del cuerpo síncrono del efecto.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     buscar('', 1)
   }, [buscar])
 
