@@ -178,8 +178,12 @@ export default function CatalogoPublico() {
       const { data: dataMarcas } = await supabase.from('marcas').select('*').order('descripcion')
       const { data: dataRubros } = await supabase.from('rubros').select('*').order('descripcion')
       const { data: dataCategorias } = await supabase.from('categorias_generales').select('*').order('descripcion')
-      const { data: dataMarcasAuto } = await supabase.from('marcas_auto').select('*').order('descripcion')
-      const { data: dataModelosAuto } = await supabase.from('modelos_auto').select('*').order('descripcion')
+      // Vistas que solo devuelven marcas/modelos con al menos un artículo
+      // asociado (ver supabase/marca-modelo-auto-vistas-filtradas.sql) —
+      // así el filtro no muestra marcas vacías, y se actualiza solo si se
+      // cargan artículos nuevos de una marca que hoy no tiene ninguno.
+      const { data: dataMarcasAuto } = await supabase.from('marcas_auto_con_datos').select('*').order('descripcion')
+      const { data: dataModelosAuto } = await supabase.from('modelos_auto_con_datos').select('*').order('descripcion')
 
       if (dataMarcas) setMarcas(dataMarcas)
       if (dataRubros) {
