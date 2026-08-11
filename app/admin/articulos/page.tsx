@@ -34,7 +34,9 @@ export default function EditarArticulos() {
   const [busqueda, setBusqueda] = useState('')
   const [resultados, setResultados] = useState<Articulo[]>([])
   const [cargando, setCargando] = useState(false)
-  const [buscoAlMenosUnaVez, setBuscoAlMenosUnaVez] = useState(false)
+  const [paginaActual, setPaginaActual] = useState(1)
+  const [totalRegistros, setTotalRegistros] = useState(0)
+  const porPagina = 50
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [marcas, setMarcas] = useState<Categoria[]>([])
@@ -67,34 +69,43 @@ export default function EditarArticulos() {
     router.refresh()
   }
 
-  const buscar = useCallback(async (termino: string) => {
-    const limpio = termino.trim()
-    if (limpio.length < 2) {
-      setResultados([])
-      setBuscoAlMenosUnaVez(false)
-      return
-    }
+  const buscar = useCallback(async (termino: string, pagina: number) => {
     setCargando(true)
-    setBuscoAlMenosUnaVez(true)
 
-    const palabras = limpio.split(/\s+/)
+    const limpio = termino.trim()
     let query = supabase
       .from('articulos')
-      .select('id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_marca, id_rubro, precio_1')
+      .select('id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_marca, id_rubro, precio_1', { count: 'exact' })
 
-    palabras.forEach(palabra => {
-      query = query.or(`descripcion.ilike.%${palabra}%,descripcion_estandarizada.ilike.%${palabra}%,codigo.ilike.%${palabra}%,codigo_proveedor.ilike.%${palabra}%`)
-    })
+    if (limpio.length >= 2) {
+      limpio.split(/\s+/).forEach(palabra => {
+        query = query.or(`descripcion.ilike.%${palabra}%,descripcion_estandarizada.ilike.%${palabra}%,codigo.ilike.%${palabra}%,codigo_proveedor.ilike.%${palabra}%`)
+      })
+    }
 
-    const { data } = await query.order('codigo').limit(50)
+    const desde = (pagina - 1) * porPagina
+    const hasta = desde + porPagina - 1
+
+    const { data, count } = await query.order('codigo').range(desde, hasta)
     setResultados(data ?? [])
+    setTotalRegistros(count ?? 0)
     setCargando(false)
   }, [])
 
+  useEffect(() => {
+    buscar('', 1)
+  }, [buscar])
+
   const handleBusqueda = (val: string) => {
     setBusqueda(val)
+    setPaginaActual(1)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => buscar(val), 400)
+    debounceRef.current = setTimeout(() => buscar(val, 1), 400)
+  }
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    setPaginaActual(nuevaPagina)
+    buscar(busqueda, nuevaPagina)
   }
 
   const abrirEdicion = (item: Articulo) => {
@@ -182,6 +193,8 @@ export default function EditarArticulos() {
     .filter(r => r.id !== 0)
     .filter(r => !categoriaEdicion || String(r.id_categoria_general) === categoriaEdicion)
 
+  const totalPaginas = Math.ceil(totalRegistros / porPagina)
+
   return (
     <main className="min-h-screen bg-black text-zinc-300 font-sans p-6">
       <div className="max-w-5xl mx-auto">
@@ -202,17 +215,17 @@ export default function EditarArticulos() {
 
         <input
           type="text"
-          placeholder="Buscar por código, proveedor o descripción..."
+          placeholder="Buscar por código, proveedor o descripción... (vacío = todos los artículos)"
           value={busqueda}
           onChange={(e) => handleBusqueda(e.target.value)}
           className="w-full bg-zinc-900/30 border border-zinc-800 rounded-sm px-5 py-3 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all mb-6"
         />
 
         {cargando ? (
-          <div className="text-center py-16 text-xs text-orange-500/70 uppercase tracking-[0.2em] animate-pulse">Buscando...</div>
-        ) : buscoAlMenosUnaVez && resultados.length === 0 ? (
+          <div className="text-center py-16 text-xs text-orange-500/70 uppercase tracking-[0.2em] animate-pulse">Cargando...</div>
+        ) : resultados.length === 0 ? (
           <div className="text-center py-16 text-zinc-600 font-light">No se encontraron artículos.</div>
-        ) : resultados.length > 0 ? (
+        ) : (
           <div className="overflow-x-auto border border-zinc-900">
             <table className="w-full text-sm border-collapse">
               <thead>
@@ -227,7 +240,12 @@ export default function EditarArticulos() {
                 {resultados.map(item => (
                   <tr key={item.id} className="border-b border-zinc-900 last:border-b-0 hover:bg-zinc-900/50 transition-colors">
                     <td className="px-4 py-3 text-orange-500/80 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
-                    <td className="px-4 py-3 text-zinc-300 font-light">{item.descripcion}</td>
+                    <td className="px-4 py-3 text-zinc-300 font-light">
+                      {item.descripcion}
+                      {item.descripcion_estandarizada && (
+                        <span className="ml-2 text-[9px] uppercase tracking-widest text-orange-500/70">· estandarizada</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-right text-white font-light whitespace-nowrap">${item.precio_1.toLocaleString('es-AR')}</td>
                     <td className="px-4 py-3 text-right">
                       <button
@@ -241,14 +259,33 @@ export default function EditarArticulos() {
                 ))}
               </tbody>
             </table>
-            {resultados.length === 50 && (
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest px-4 py-3 border-t border-zinc-900">
-                Mostrando los primeros 50 resultados — afiná la búsqueda para ver otros.
-              </p>
-            )}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-900">
+              <span className="text-[10px] text-zinc-600 uppercase tracking-widest">
+                {totalRegistros} artículo{totalRegistros === 1 ? '' : 's'}
+              </span>
+              {totalPaginas > 1 && (
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => cambiarPagina(paginaActual - 1)}
+                    disabled={paginaActual === 1}
+                    className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 hover:text-orange-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Anterior
+                  </button>
+                  <span className="text-[10px] font-mono tracking-widest text-zinc-600">
+                    {paginaActual} / {totalPaginas}
+                  </span>
+                  <button
+                    onClick={() => cambiarPagina(paginaActual + 1)}
+                    disabled={paginaActual === totalPaginas}
+                    className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 hover:text-orange-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        ) : (
-          <div className="text-center py-16 text-zinc-600 font-light">Escribí al menos 2 caracteres para buscar un artículo.</div>
         )}
       </div>
 
