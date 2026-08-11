@@ -12,6 +12,7 @@ interface Articulo {
   id: number;
   codigo: string;
   descripcion: string;
+  descripcion_estandarizada: string | null;
   codigo_proveedor: string | null;
   id_marca: number;
   id_rubro: number;
@@ -79,10 +80,10 @@ export default function EditarArticulos() {
     const palabras = limpio.split(/\s+/)
     let query = supabase
       .from('articulos')
-      .select('id, codigo, descripcion, codigo_proveedor, id_marca, id_rubro, precio_1')
+      .select('id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_marca, id_rubro, precio_1')
 
     palabras.forEach(palabra => {
-      query = query.or(`descripcion.ilike.%${palabra}%,codigo.ilike.%${palabra}%,codigo_proveedor.ilike.%${palabra}%`)
+      query = query.or(`descripcion.ilike.%${palabra}%,descripcion_estandarizada.ilike.%${palabra}%,codigo.ilike.%${palabra}%,codigo_proveedor.ilike.%${palabra}%`)
     })
 
     const { data } = await query.order('codigo').limit(50)
@@ -156,6 +157,7 @@ export default function EditarArticulos() {
         .update({
           codigo: codigoNuevo,
           descripcion: articuloEditando.descripcion.trim(),
+          descripcion_estandarizada: articuloEditando.descripcion_estandarizada?.trim() || null,
           codigo_proveedor: articuloEditando.codigo_proveedor?.trim() || null,
           id_marca: articuloEditando.id_marca,
           id_rubro: articuloEditando.id_rubro,
@@ -301,12 +303,23 @@ export default function EditarArticulos() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Descripción</label>
+                <label className="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Descripción (original, del sistema de facturación)</label>
                 <textarea
                   value={articuloEditando.descripcion}
                   onChange={(e) => setArticuloEditando({ ...articuloEditando, descripcion: e.target.value })}
                   rows={2}
                   className="w-full bg-black border border-zinc-800 rounded-sm px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-orange-500/50 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Descripción estandarizada (opcional)</label>
+                <textarea
+                  value={articuloEditando.descripcion_estandarizada ?? ''}
+                  onChange={(e) => setArticuloEditando({ ...articuloEditando, descripcion_estandarizada: e.target.value })}
+                  rows={2}
+                  placeholder="Si se completa, esta es la que se muestra en el catálogo público. No se pisa al re-importar el Excel."
+                  className="w-full bg-black border border-zinc-800 rounded-sm px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-orange-500/50 resize-none placeholder:text-zinc-600"
                 />
               </div>
 

@@ -10,12 +10,18 @@ interface Articulo {
   id: number;
   codigo: string;
   descripcion: string;
+  descripcion_estandarizada?: string | null;
   codigo_proveedor?: string;
   precio_1: number;
   marcas?: { descripcion: string } | null;
   rubros?: { descripcion: string } | null;
-  imagen_url?: string; 
+  imagen_url?: string;
 }
+
+// La descripción estandarizada (cargada a mano desde /admin/articulos) no se
+// pisa al re-importar el Excel del sistema de facturación, a diferencia de
+// "descripcion". Se muestra siempre que esté cargada.
+const descripcionMostrada = (a: Articulo) => a.descripcion_estandarizada || a.descripcion
 
 interface ItemCarrito extends Articulo {
   cantidad: number;
@@ -86,7 +92,7 @@ export default function CatalogoPublico() {
 
     let query = supabase
       .from('articulos')
-      .select('id, codigo, descripcion, codigo_proveedor, precio_1, marcas(descripcion), rubros(descripcion)', { count: 'exact' })
+      .select('id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, precio_1, marcas(descripcion), rubros(descripcion)', { count: 'exact' })
       .gt('precio_1', 0)
 
     const limpio = termino.trim()
@@ -102,6 +108,7 @@ export default function CatalogoPublico() {
         const normalizado = limpio.toLowerCase().replace(/[^a-z0-9áéíóúñ]/gi, '')
         const alternativas = [
           `descripcion.ilike.%${limpio}%`,
+          `descripcion_estandarizada.ilike.%${limpio}%`,
           `codigo.ilike.%${limpio}%`,
           `codigo_proveedor.ilike.%${limpio}%`,
         ]
@@ -111,7 +118,7 @@ export default function CatalogoPublico() {
         query = query.or(alternativas.join(','))
       } else {
         palabras.forEach(palabra => {
-          query = query.or(`descripcion.ilike.%${palabra}%,codigo.ilike.%${palabra}%,codigo_proveedor.ilike.%${palabra}%`)
+          query = query.or(`descripcion.ilike.%${palabra}%,descripcion_estandarizada.ilike.%${palabra}%,codigo.ilike.%${palabra}%,codigo_proveedor.ilike.%${palabra}%`)
         })
       }
     }
@@ -245,7 +252,7 @@ export default function CatalogoPublico() {
     let texto = "Hola *Swami Distribuidora*!%0AQuería solicitar una cotización por los siguientes repuestos:%0A%0A"
     
     carrito.forEach(item => {
-      texto += `🔹 *[${item.codigo}]* ${item.descripcion} (x${item.cantidad})%0A`
+      texto += `🔹 *[${item.codigo}]* ${descripcionMostrada(item)} (x${item.cantidad})%0A`
     })
     
     texto += `%0A*Total estimado:* $${totalCarrito.toLocaleString('es-AR')}`
@@ -439,7 +446,7 @@ export default function CatalogoPublico() {
                       className="border-b border-zinc-900 last:border-b-0 hover:bg-zinc-900/50 cursor-pointer transition-colors"
                     >
                       <td className="px-4 py-3 text-orange-500/80 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
-                      <td className="px-4 py-3 text-zinc-300 font-light">{item.descripcion}</td>
+                      <td className="px-4 py-3 text-zinc-300 font-light">{descripcionMostrada(item)}</td>
                       <td className="px-4 py-3 text-zinc-500 text-[11px] uppercase tracking-wider hidden md:table-cell">
                         {item.marcas?.descripcion && item.marcas.descripcion !== 'Sin Marca' ? item.marcas.descripcion : '—'}
                       </td>
@@ -484,7 +491,7 @@ export default function CatalogoPublico() {
                     <div className="relative aspect-square w-full bg-black border border-zinc-900 mb-5 flex items-center justify-center overflow-hidden group-hover:border-orange-500/20 transition-colors">
                       <Image
                         src={`${SUPABASE_STORAGE_URL}/${item.codigo}.jpg`}
-                        alt={item.descripcion}
+                        alt={descripcionMostrada(item)}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
@@ -509,7 +516,7 @@ export default function CatalogoPublico() {
                     </div>
 
                     <h2 className="text-sm font-light text-zinc-300 leading-relaxed mb-2 line-clamp-2 group-hover:text-white transition-colors">
-                      {item.descripcion}
+                      {descripcionMostrada(item)}
                     </h2>
                   </div>
                   
@@ -570,7 +577,7 @@ export default function CatalogoPublico() {
             <div className="w-full md:w-1/2 bg-black border-b md:border-b-0 md:border-r border-zinc-900 aspect-square md:aspect-auto flex items-center justify-center relative p-8">
               <Image
                 src={`${SUPABASE_STORAGE_URL}/${articuloSeleccionado.codigo}.jpg`}
-                alt={articuloSeleccionado.descripcion}
+                alt={descripcionMostrada(articuloSeleccionado)}
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-contain"
@@ -608,7 +615,7 @@ export default function CatalogoPublico() {
                 </div>
 
                 <h2 className="text-2xl font-light text-white leading-snug mb-4">
-                  {articuloSeleccionado.descripcion}
+                  {descripcionMostrada(articuloSeleccionado)}
                 </h2>
 
                 <div className="flex flex-col gap-2 text-xs text-zinc-500 uppercase tracking-widest mt-6">
@@ -660,7 +667,7 @@ export default function CatalogoPublico() {
                     <div className="flex justify-between items-start">
                       <div className="pr-4">
                         <span className="text-[10px] text-orange-500/80 font-mono block mb-2">{item.codigo}</span>
-                        <p className="text-sm font-light text-zinc-300 leading-relaxed">{item.descripcion}</p>
+                        <p className="text-sm font-light text-zinc-300 leading-relaxed">{descripcionMostrada(item)}</p>
                       </div>
                       <button onClick={() => removerDelCarrito(item.id)} className="text-zinc-700 hover:text-red-500 transition-colors">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
