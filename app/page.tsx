@@ -36,6 +36,10 @@ interface Rubro extends Categoria {
   id_categoria_general: number | null;
 }
 
+interface ModeloAuto extends Categoria {
+  id_marca_auto: number;
+}
+
 export default function CatalogoPublico() {
   const [repuestos, setRepuestos] = useState<Articulo[]>([])
   const [marcas, setMarcas] = useState<Categoria[]>([])
@@ -43,10 +47,15 @@ export default function CatalogoPublico() {
   const [categoriasGenerales, setCategoriasGenerales] = useState<Categoria[]>([])
   const rubrosRef = useRef<Rubro[]>([])
 
+  const [marcasAuto, setMarcasAuto] = useState<Categoria[]>([])
+  const [modelosAuto, setModelosAuto] = useState<ModeloAuto[]>([])
+
   const [busqueda, setBusqueda] = useState('')
   const [marcaFiltro, setMarcaFiltro] = useState<string>('')
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>('')
   const [rubroFiltro, setRubroFiltro] = useState<string>('')
+  const [vehiculoFiltro, setVehiculoFiltro] = useState<string>('')
+  const [modeloAutoFiltro, setModeloAutoFiltro] = useState<string>('')
   const [cargando, setCargando] = useState(true)
 
   const [paginaActual, setPaginaActual] = useState(1)
@@ -86,13 +95,21 @@ export default function CatalogoPublico() {
     localStorage.setItem('swami_carrito', JSON.stringify(carrito))
   }, [carrito])
 
-  const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idCategoria: string, idRubro: string, pagina: number) => {
+  const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idCategoria: string, idRubro: string, idVehiculo: string, idModeloAuto: string, pagina: number) => {
     setCargando(true)
     setErrorCarga(false)
 
+    // El join a articulos_modelos_auto solo hace falta (y solo se pide con
+    // !inner, para no traer artículos sin ningún vehículo asociado) cuando
+    // hay un filtro de marca/modelo de auto activo.
+    const necesitaVehiculo = !!(idVehiculo || idModeloAuto)
+    const seleccionVehiculo = necesitaVehiculo
+      ? ', articulos_modelos_auto!inner(modelos_auto!inner(id_marca_auto))'
+      : ''
+
     let query = supabase
       .from('articulos')
-      .select('id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, precio_1, marcas(descripcion), rubros(descripcion)', { count: 'exact' })
+      .select(`id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, precio_1, marcas(descripcion), rubros(descripcion)${seleccionVehiculo}`, { count: 'exact' })
       .gt('precio_1', 0)
 
     const limpio = termino.trim()
@@ -134,6 +151,12 @@ export default function CatalogoPublico() {
       query = query.in('id_rubro', idsEnCategoria.length > 0 ? idsEnCategoria : [-1])
     }
 
+    if (idModeloAuto) {
+      query = query.eq('articulos_modelos_auto.id_modelo_auto', idModeloAuto)
+    } else if (idVehiculo) {
+      query = query.eq('articulos_modelos_auto.modelos_auto.id_marca_auto', idVehiculo)
+    }
+
     const desde = (pagina - 1) * porPagina
     const hasta = desde + porPagina - 1
 
@@ -155,6 +178,8 @@ export default function CatalogoPublico() {
       const { data: dataMarcas } = await supabase.from('marcas').select('*').order('descripcion')
       const { data: dataRubros } = await supabase.from('rubros').select('*').order('descripcion')
       const { data: dataCategorias } = await supabase.from('categorias_generales').select('*').order('descripcion')
+      const { data: dataMarcasAuto } = await supabase.from('marcas_auto').select('*').order('descripcion')
+      const { data: dataModelosAuto } = await supabase.from('modelos_auto').select('*').order('descripcion')
 
       if (dataMarcas) setMarcas(dataMarcas)
       if (dataRubros) {
@@ -162,8 +187,10 @@ export default function CatalogoPublico() {
         rubrosRef.current = dataRubros
       }
       if (dataCategorias) setCategoriasGenerales(dataCategorias)
+      if (dataMarcasAuto) setMarcasAuto(dataMarcasAuto)
+      if (dataModelosAuto) setModelosAuto(dataModelosAuto)
 
-      aplicarFiltros('', '', '', '', 1)
+      aplicarFiltros('', '', '', '', '', '', 1)
     }
 
     inicializarCatalogo()
@@ -176,7 +203,7 @@ export default function CatalogoPublico() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       if (val.length >= 2 || val.length === 0) {
-        aplicarFiltros(val, marcaFiltro, categoriaFiltro, rubroFiltro, 1)
+        aplicarFiltros(val, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, 1)
       }
     }, 400)
   }
@@ -184,20 +211,33 @@ export default function CatalogoPublico() {
   const handleMarca = (val: string) => {
     setMarcaFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busqueda, val, categoriaFiltro, rubroFiltro, 1)
+    aplicarFiltros(busqueda, val, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, 1)
   }
 
   const handleCategoria = (val: string) => {
     setCategoriaFiltro(val)
     setRubroFiltro('')
     setPaginaActual(1)
-    aplicarFiltros(busqueda, marcaFiltro, val, '', 1)
+    aplicarFiltros(busqueda, marcaFiltro, val, '', vehiculoFiltro, modeloAutoFiltro, 1)
   }
 
   const handleRubro = (val: string) => {
     setRubroFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, val, 1)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, val, vehiculoFiltro, modeloAutoFiltro, 1)
+  }
+
+  const handleVehiculo = (val: string) => {
+    setVehiculoFiltro(val)
+    setModeloAutoFiltro('')
+    setPaginaActual(1)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, val, '', 1)
+  }
+
+  const handleModeloAuto = (val: string) => {
+    setModeloAutoFiltro(val)
+    setPaginaActual(1)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, val, 1)
   }
 
   const limpiarFiltros = () => {
@@ -206,15 +246,17 @@ export default function CatalogoPublico() {
     setMarcaFiltro('')
     setCategoriaFiltro('')
     setRubroFiltro('')
+    setVehiculoFiltro('')
+    setModeloAutoFiltro('')
     setPaginaActual(1)
-    aplicarFiltros('', '', '', '', 1)
+    aplicarFiltros('', '', '', '', '', '', 1)
   }
 
-  const hayFiltrosActivos = busqueda !== '' || marcaFiltro !== '' || categoriaFiltro !== '' || rubroFiltro !== ''
+  const hayFiltrosActivos = busqueda !== '' || marcaFiltro !== '' || categoriaFiltro !== '' || rubroFiltro !== '' || vehiculoFiltro !== '' || modeloAutoFiltro !== ''
 
   const cambiarPagina = (nuevaPagina: number) => {
     setPaginaActual(nuevaPagina)
-    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, nuevaPagina)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, nuevaPagina)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -323,8 +365,8 @@ export default function CatalogoPublico() {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 border-t border-zinc-900 pt-6">
-            <div className="flex-1 flex flex-col gap-1.5">
+          <div className="flex flex-col md:flex-row md:flex-wrap gap-4 border-t border-zinc-900 pt-6">
+            <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Marca</span>
               <select
                 value={marcaFiltro}
@@ -338,7 +380,7 @@ export default function CatalogoPublico() {
               </select>
             </div>
 
-            <div className="flex-1 flex flex-col gap-1.5">
+            <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Rubro</span>
               <select
                 value={categoriaFiltro}
@@ -352,7 +394,7 @@ export default function CatalogoPublico() {
               </select>
             </div>
 
-            <div className="flex-1 flex flex-col gap-1.5">
+            <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Subrubro</span>
               <select
                 value={rubroFiltro}
@@ -365,6 +407,37 @@ export default function CatalogoPublico() {
                   .filter(r => !categoriaFiltro || String(r.id_categoria_general) === categoriaFiltro)
                   .map(r => (
                     <option key={r.id} value={r.id}>{r.descripcion}</option>
+                  ))}
+              </select>
+            </div>
+
+            <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Vehículo</span>
+              <select
+                value={vehiculoFiltro}
+                onChange={(e) => handleVehiculo(e.target.value)}
+                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+              >
+                <option value="">Todos</option>
+                {marcasAuto.map(m => (
+                  <option key={m.id} value={m.id}>{m.descripcion}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Modelo</span>
+              <select
+                value={modeloAutoFiltro}
+                onChange={(e) => handleModeloAuto(e.target.value)}
+                disabled={!vehiculoFiltro}
+                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px] disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <option value="">Todos</option>
+                {modelosAuto
+                  .filter(m => !vehiculoFiltro || String(m.id_marca_auto) === vehiculoFiltro)
+                  .map(m => (
+                    <option key={m.id} value={m.id}>{m.descripcion}</option>
                   ))}
               </select>
             </div>
