@@ -18,8 +18,13 @@ interface Articulo {
   id_proveedor?: number;
   precio_1: number;
   marcas?: { descripcion: string } | null;
-  rubros?: { descripcion: string } | null;
+  rubros?: { descripcion: string; categorias_generales?: { descripcion: string } | null } | null;
   imagen_url?: string;
+}
+
+interface VehiculoCompatible {
+  marca: string;
+  modelo: string;
 }
 
 // La descripción estandarizada (cargada a mano desde /admin/articulos) no se
@@ -76,6 +81,7 @@ export default function CatalogoPublico() {
   const primerRenderCarrito = useRef(true)
 
   const [articuloSeleccionado, setArticuloSeleccionado] = useState<Articulo | null>(null)
+  const [vehiculosCompatibles, setVehiculosCompatibles] = useState<VehiculoCompatible[]>([])
   const [vistaLista, setVistaLista] = useState(true)
 
   const router = useRouter()
@@ -133,6 +139,37 @@ export default function CatalogoPublico() {
     }
     restaurarSesion()
   }, [])
+
+  // Compatibilidad de vehículo (marca auto / modelo) del artículo abierto en
+  // el modal: es una relación muchos-a-muchos que no viaja en el listado
+  // principal, así que se busca aparte solo cuando se abre el detalle.
+  useEffect(() => {
+    let cancelado = false
+    const buscarVehiculos = async () => {
+      if (!articuloSeleccionado) {
+        setVehiculosCompatibles([])
+        return
+      }
+
+      const { data } = await supabase
+        .from('articulos_modelos_auto')
+        .select('modelos_auto(descripcion, marcas_auto(descripcion))')
+        .eq('id_articulo', articuloSeleccionado.id)
+
+      if (cancelado) return
+
+      type FilaVehiculo = { modelos_auto: { descripcion: string; marcas_auto: { descripcion: string } | null } | null }
+      const vehiculos = ((data ?? []) as unknown as FilaVehiculo[])
+        .map((fila) => fila.modelos_auto)
+        .filter((m): m is { descripcion: string; marcas_auto: { descripcion: string } | null } => !!m)
+        .map((m) => ({ marca: m.marcas_auto?.descripcion ?? '', modelo: m.descripcion }))
+
+      setVehiculosCompatibles(vehiculos)
+    }
+    buscarVehiculos()
+
+    return () => { cancelado = true }
+  }, [articuloSeleccionado])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -195,7 +232,7 @@ export default function CatalogoPublico() {
 
     let query = supabase
       .from('articulos')
-      .select(`id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_proveedor, precio_1, marcas(descripcion), rubros(descripcion)${seleccionVehiculo}`, { count: 'exact' })
+      .select(`id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_proveedor, precio_1, marcas(descripcion), rubros(descripcion, categorias_generales(descripcion))${seleccionVehiculo}`, { count: 'exact' })
       .gt('precio_1', 0)
 
     const limpio = termino.trim()
@@ -911,9 +948,21 @@ export default function CatalogoPublico() {
                   {articuloSeleccionado.marcas?.descripcion && (
                     <p>Marca: <span className="text-zinc-300">{articuloSeleccionado.marcas.descripcion}</span></p>
                   )}
-                  {articuloSeleccionado.rubros?.descripcion && (
-                    <p>Rubro: <span className="text-zinc-300">{articuloSeleccionado.rubros.descripcion}</span></p>
+                  {articuloSeleccionado.rubros?.categorias_generales?.descripcion && (
+                    <p>Rubro: <span className="text-zinc-300">{articuloSeleccionado.rubros.categorias_generales.descripcion}</span></p>
                   )}
+                  {articuloSeleccionado.rubros?.descripcion && (
+                    <p>Subrubro: <span className="text-zinc-300">{articuloSeleccionado.rubros.descripcion}</span></p>
+                  )}
+                  {Object.entries(
+                    vehiculosCompatibles.reduce<Record<string, string[]>>((acc, v) => {
+                      if (!v.marca) return acc
+                      acc[v.marca] = [...(acc[v.marca] ?? []), v.modelo]
+                      return acc
+                    }, {})
+                  ).map(([marca, modelos]) => (
+                    <p key={marca}>Marca Auto: <span className="text-zinc-300">{marca}</span> — Modelo: <span className="text-zinc-300">{modelos.join(', ')}</span></p>
+                  ))}
                 </div>
               </div>
 
