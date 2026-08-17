@@ -48,6 +48,7 @@ export default function CatalogoPublico() {
   const [rubros, setRubros] = useState<Rubro[]>([])
   const [categoriasGenerales, setCategoriasGenerales] = useState<Categoria[]>([])
   const rubrosRef = useRef<Rubro[]>([])
+  const proveedoresOcultosRef = useRef<number[]>([])
 
   const [marcasAuto, setMarcasAuto] = useState<Categoria[]>([])
   const [modelosAuto, setModelosAuto] = useState<ModeloAuto[]>([])
@@ -195,6 +196,12 @@ export default function CatalogoPublico() {
       .select(`id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, precio_1, marcas(descripcion), rubros(descripcion)${seleccionVehiculo}`, { count: 'exact' })
       .gt('precio_1', 0)
 
+    // Proveedores marcados como ocultos (ej. Expoyer, Altamira) no se
+    // muestran en el catálogo público, aunque el artículo siga activo.
+    if (proveedoresOcultosRef.current.length > 0) {
+      query = query.not('id_proveedor', 'in', `(${proveedoresOcultosRef.current.join(',')})`)
+    }
+
     const limpio = termino.trim()
     if (limpio.length >= 2) {
       const palabras = limpio.split(/\s+/)
@@ -263,6 +270,7 @@ export default function CatalogoPublico() {
       const { data: dataMarcas } = await supabase.from('marcas').select('*').order('descripcion')
       const { data: dataRubros } = await supabase.from('rubros').select('*').order('descripcion')
       const { data: dataCategorias } = await supabase.from('categorias_generales').select('*').order('descripcion')
+      const { data: dataProveedoresOcultos } = await supabase.from('proveedores').select('id').eq('oculto', true)
       // Vistas que solo devuelven marcas/modelos con al menos un artículo
       // asociado (ver supabase/marca-modelo-auto-vistas-filtradas.sql) —
       // así el filtro no muestra marcas vacías, y se actualiza solo si se
@@ -276,6 +284,7 @@ export default function CatalogoPublico() {
         rubrosRef.current = dataRubros
       }
       if (dataCategorias) setCategoriasGenerales(dataCategorias)
+      if (dataProveedoresOcultos) proveedoresOcultosRef.current = dataProveedoresOcultos.map(p => p.id)
       if (dataMarcasAuto) setMarcasAuto(dataMarcasAuto)
       if (dataModelosAuto) setModelosAuto(dataModelosAuto)
 
