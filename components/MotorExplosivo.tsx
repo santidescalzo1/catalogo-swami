@@ -36,12 +36,11 @@ export default function MotorExplosivo() {
     const nodo = seccionRef.current
     if (!nodo) return
 
+    // Se arma al entrar en pantalla y se desarma al salir, cada vez que
+    // pase — no queda "conectado" una sola vez como antes.
     const observer = new IntersectionObserver(
       (entradas) => {
-        if (entradas[0]?.isIntersecting) {
-          setArmado(true)
-          observer.disconnect()
-        }
+        setArmado(!!entradas[0]?.isIntersecting)
       },
       { threshold: 0.35 }
     )
