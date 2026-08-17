@@ -931,7 +931,8 @@ export default function Catalogo({ modo }: { modo: Modo }) {
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-orange-50 border-b-2 border-orange-300 text-[10px] uppercase tracking-[0.2em] text-orange-900">
-                    <th className="text-left font-semibold px-4 py-3">Código</th>
+                    <th className="text-left font-semibold px-4 py-3">Código Original</th>
+                    <th className="text-left font-semibold px-4 py-3">Código Interno</th>
                     <th className="text-left font-semibold px-4 py-3">Descripción</th>
                     <th className="text-left font-semibold px-4 py-3 hidden md:table-cell">Marca</th>
                     <th className="text-left font-semibold px-4 py-3 hidden md:table-cell">Rubro</th>
@@ -946,7 +947,10 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                       onClick={() => setArticuloSeleccionado(item)}
                       className="border-b border-zinc-300 last:border-b-0 odd:bg-white even:bg-zinc-50 hover:bg-orange-50 cursor-pointer transition-colors"
                     >
-                      <td className="px-4 py-3 text-orange-600 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
+                      <td className="px-4 py-3 text-orange-600 font-mono text-[11px] whitespace-nowrap">
+                        {item.codigo_proveedor && !proveedoresSinRef.includes(item.id_proveedor ?? -1) ? item.codigo_proveedor : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-zinc-500 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
                       <td className="px-4 py-3 text-zinc-900 font-light">{descripcionMostrada(item)}</td>
                       <td className="px-4 py-3 text-zinc-500 text-[11px] uppercase tracking-wider hidden md:table-cell">
                         {item.marcas?.descripcion && item.marcas.descripcion !== 'Sin Marca' ? item.marcas.descripcion : '—'}
