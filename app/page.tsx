@@ -82,6 +82,7 @@ export default function CatalogoPublico() {
   const [errorLogin, setErrorLogin] = useState('')
   const [cargandoLogin, setCargandoLogin] = useState(false)
   const [clienteSesion, setClienteSesion] = useState<{ nombre: string; descuento_pct: number } | null>(null)
+  const [adminSesion, setAdminSesion] = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -117,7 +118,15 @@ export default function CatalogoPublico() {
         .select('nombre, descuento_pct')
         .eq('id', session.user.id)
         .maybeSingle()
-      if (cliente) setClienteSesion(cliente)
+      if (cliente) {
+        setClienteSesion(cliente)
+        return
+      }
+
+      // No es cliente: puede ser el admin volviendo desde /admin via
+      // "Ver catálogo" (esa navegación mantiene la sesión a propósito).
+      const { data: esAdmin } = await supabase.from('admins').select('id').eq('id', session.user.id).maybeSingle()
+      if (esAdmin) setAdminSesion(true)
     }
     restaurarSesion()
   }, [])
@@ -163,9 +172,10 @@ export default function CatalogoPublico() {
     setCargandoLogin(false)
   }
 
-  const handleLogoutCliente = async () => {
+  const handleLogoutSesion = async () => {
     await supabase.auth.signOut()
     setClienteSesion(null)
+    setAdminSesion(false)
   }
 
   const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idCategoria: string, idRubro: string, idVehiculo: string, idModeloAuto: string, soloOferta: boolean, pagina: number) => {
@@ -419,11 +429,11 @@ export default function CatalogoPublico() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setMostrarLogin(true)}
-                  aria-label={clienteSesion ? `Mi cuenta: ${clienteSesion.nombre}` : 'Ingresar'}
+                  aria-label={clienteSesion ? `Mi cuenta: ${clienteSesion.nombre}` : adminSesion ? 'Sesión de administrador' : 'Ingresar'}
                   className="relative p-2 -ml-2 text-zinc-400 hover:text-orange-500 transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                  {clienteSesion && (
+                  {(clienteSesion || adminSesion) && (
                     <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-orange-500" />
                   )}
                 </button>
@@ -879,7 +889,7 @@ export default function CatalogoPublico() {
           <div className="fixed top-0 left-0 h-full w-full max-w-sm bg-zinc-950 border-r border-zinc-900 z-50 flex flex-col shadow-2xl">
             <div className="p-8 border-b border-zinc-900 flex justify-between items-center bg-zinc-950/50">
               <h2 className="text-sm font-light tracking-[0.3em] text-white uppercase">
-                {clienteSesion ? 'Mi cuenta' : 'Ingresar'}
+                {clienteSesion || adminSesion ? 'Mi cuenta' : 'Ingresar'}
               </h2>
               <button onClick={() => setMostrarLogin(false)} className="text-zinc-600 hover:text-orange-500 transition-colors p-2">✕</button>
             </div>
@@ -896,7 +906,25 @@ export default function CatalogoPublico() {
                     </p>
                   )}
                   <button
-                    onClick={handleLogoutCliente}
+                    onClick={handleLogoutSesion}
+                    className="w-full border border-zinc-800 text-zinc-400 py-3 text-xs uppercase tracking-widest hover:border-orange-500/50 hover:text-orange-400 transition-colors"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              ) : adminSesion ? (
+                <div className="space-y-6">
+                  <p className="text-sm text-zinc-400">
+                    Sesión de <span className="text-white">administrador</span> activa.
+                  </p>
+                  <Link
+                    href="/admin"
+                    className="block text-center w-full bg-white hover:bg-orange-500 text-black text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors"
+                  >
+                    Ir al panel administrador
+                  </Link>
+                  <button
+                    onClick={handleLogoutSesion}
                     className="w-full border border-zinc-800 text-zinc-400 py-3 text-xs uppercase tracking-widest hover:border-orange-500/50 hover:text-orange-400 transition-colors"
                   >
                     Cerrar sesión
