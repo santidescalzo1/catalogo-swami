@@ -666,7 +666,20 @@ export default function CatalogoPublico() {
       </div>
 
       {/* GRILLA DE PRODUCTOS */}
-      <section ref={catalogoRef} className="max-w-7xl mx-auto px-6 py-12 scroll-mt-24">
+      {/* Piso de taller: grilla tenue que se repite en todo el alto de la
+          seccion, para que la profundidad de color acompañe aunque la lista
+          sea larga y no se quede solo cerca del header. */}
+      <section
+        ref={catalogoRef}
+        className="py-12 scroll-mt-24"
+        style={{
+          backgroundColor: '#0d0c0b',
+          backgroundImage:
+            'linear-gradient(rgba(148,163,184,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.055) 1px, transparent 1px)',
+          backgroundSize: '26px 26px',
+        }}
+      >
+      <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center mb-8 text-[10px] text-zinc-500 uppercase tracking-[0.2em]">
           <span>Inventario Swami</span>
           <div className="flex items-center gap-6">
@@ -849,6 +862,7 @@ export default function CatalogoPublico() {
             )}
           </>
         )}
+      </div>
       </section>
 
       <MotorExplosivo />
