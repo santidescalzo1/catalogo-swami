@@ -131,12 +131,12 @@ export default function MotorExplosivo() {
   return (
     <section
       ref={seccionRef}
-      className="relative border-t border-zinc-800/50 bg-gradient-to-b from-transparent via-[#140f0a]/60 to-transparent overflow-hidden"
+      className="relative border-t border-zinc-200 bg-gradient-to-b from-transparent via-orange-50/50 to-transparent overflow-hidden"
     >
       <div className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
-          <span className="text-[10px] text-orange-500 tracking-[0.3em] uppercase">Ingeniería a la vista</span>
-          <h2 className="text-3xl sm:text-4xl font-light text-white leading-tight mt-3 mb-5">
+          <span className="text-[10px] text-orange-600 tracking-[0.3em] uppercase">Ingeniería a la vista</span>
+          <h2 className="text-3xl sm:text-4xl font-light text-zinc-900 leading-tight mt-3 mb-5">
             Motor por motor,<br />pieza por pieza.
           </h2>
           <p className="text-sm text-zinc-500 leading-relaxed max-w-md">
@@ -145,7 +145,7 @@ export default function MotorExplosivo() {
           </p>
           <button
             onClick={() => seccionRef.current?.previousElementSibling?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-            className="mt-8 text-[11px] uppercase tracking-[0.2em] text-zinc-400 hover:text-orange-400 border border-zinc-800 hover:border-orange-500/50 px-5 py-3 transition-colors"
+            className="mt-8 text-[11px] uppercase tracking-[0.2em] text-zinc-500 hover:text-orange-600 border border-zinc-200 hover:border-orange-500/50 px-5 py-3 transition-colors"
           >
             Volver al catálogo ↑
           </button>
@@ -170,7 +170,7 @@ export default function MotorExplosivo() {
             {piezas.map((pieza) => (
               <g
                 key={pieza.id}
-                className={`motor-pieza ${pieza.id === 'llave' ? 'text-orange-500/80' : 'text-zinc-400'}`}
+                className={`motor-pieza ${pieza.id === 'llave' ? 'text-orange-600/80' : 'text-zinc-500'}`}
                 style={{
                   transform: armado ? pieza.assembled : pieza.exploded,
                   transitionProperty: 'transform',
