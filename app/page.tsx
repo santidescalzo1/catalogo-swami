@@ -454,142 +454,152 @@ export default function CatalogoPublico() {
   return (
     <main className="relative min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-orange-500/30 overflow-x-hidden">
 
-      {/* BARRA DE ANUNCIOS */}
-      <div className="bg-gradient-to-r from-zinc-50 via-orange-100/70 to-zinc-50 border-b border-zinc-200">
-        <p className="max-w-7xl mx-auto px-6 py-2 text-center text-[10px] sm:text-[11px] text-orange-800 tracking-wide">
-          Envíos a todo Córdoba <span className="text-zinc-300 mx-2">·</span> Cotización directa por WhatsApp
+      {/* BARRA DE ANUNCIOS: el tono mas oscuro de la banda superior, hace de
+          "sombra" que precede al degrade del header. */}
+      <div className="bg-orange-800">
+        <p className="max-w-7xl mx-auto px-6 py-2 text-center text-[10px] sm:text-[11px] text-orange-100 tracking-wide">
+          Envíos a todo Córdoba <span className="text-orange-300/50 mx-2">·</span> Cotización directa por WhatsApp
         </p>
       </div>
 
       {/* HEADER */}
-      <header className="relative border-b border-zinc-200/50 bg-zinc-50/90 backdrop-blur-xl sticky top-0 z-20 overflow-hidden">
-        {/* Plano de motor: grilla de plano técnico que se apaga hacia los
-            bordes, para que el header se sienta como una hoja de diagramas
-            en vez de un fondo plano — conecta con el motor animado de abajo. */}
-        <div
-          aria-hidden
-          className="hidden lg:block pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(148,163,184,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.07) 1px, transparent 1px)',
-            backgroundSize: '26px 26px',
-            maskImage: 'radial-gradient(ellipse 70% 100% at 50% 0%, black 40%, transparent 90%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 70% 100% at 50% 0%, black 40%, transparent 90%)',
-          }}
-        />
+      <header className="sticky top-0 z-20 overflow-hidden shadow-sm">
+        {/* Franja de marca: degrade naranja solido, la banda de color mas
+            fuerte del sitio. */}
+        <div className="relative bg-gradient-to-br from-orange-700 to-orange-600">
+          {/* Plano de motor: grilla de plano técnico que se apaga hacia los
+              bordes — conecta con el motor animado de abajo. */}
+          <div
+            aria-hidden
+            className="hidden lg:block pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+              backgroundSize: '26px 26px',
+              maskImage: 'radial-gradient(ellipse 70% 100% at 50% 0%, black 40%, transparent 90%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 70% 100% at 50% 0%, black 40%, transparent 90%)',
+            }}
+          />
 
-        {/* Marca de agua: engranaje de línea, un guiño discreto al rubro sin
-            caer en foto de stock — se recorta y se apaga en pantallas chicas. */}
-        <svg
-          aria-hidden
-          viewBox="0 0 200 200"
-          className="hidden lg:block pointer-events-none absolute -top-16 -right-16 w-64 h-64 text-slate-500/[0.07]"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.2}
-        >
-          <circle cx={100} cy={100} r={52} />
-          <circle cx={100} cy={100} r={14} />
-          {Array.from({ length: 12 }, (_, i) => {
-            const ang = (Math.PI * 2 * i) / 12
-            const x1 = (100 + 52 * Math.cos(ang)).toFixed(2)
-            const y1 = (100 + 52 * Math.sin(ang)).toFixed(2)
-            const x2 = (100 + 68 * Math.cos(ang)).toFixed(2)
-            const y2 = (100 + 68 * Math.sin(ang)).toFixed(2)
-            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />
-          })}
-        </svg>
+          {/* Marca de agua: engranaje de línea, un guiño discreto al rubro sin
+              caer en foto de stock — se recorta y se apaga en pantallas chicas. */}
+          <svg
+            aria-hidden
+            viewBox="0 0 200 200"
+            className="hidden lg:block pointer-events-none absolute -top-16 -right-16 w-64 h-64 text-white/[0.08]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.2}
+          >
+            <circle cx={100} cy={100} r={52} />
+            <circle cx={100} cy={100} r={14} />
+            {Array.from({ length: 12 }, (_, i) => {
+              const ang = (Math.PI * 2 * i) / 12
+              const x1 = (100 + 52 * Math.cos(ang)).toFixed(2)
+              const y1 = (100 + 52 * Math.sin(ang)).toFixed(2)
+              const x2 = (100 + 68 * Math.cos(ang)).toFixed(2)
+              const y2 = (100 + 68 * Math.sin(ang)).toFixed(2)
+              return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />
+            })}
+          </svg>
 
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
+          <div className="relative max-w-7xl mx-auto px-6 py-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
 
-            {/* Título y Logo */}
-            <div className="flex items-center justify-between w-full md:w-auto gap-4">
-              <div className="flex items-center gap-4">
+              {/* Título y Logo */}
+              <div className="flex items-center justify-between w-full md:w-auto gap-4">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setMostrarLogin(true)}
+                    aria-label={clienteSesion ? `Mi cuenta: ${clienteSesion.nombre}` : adminSesion ? 'Sesión de administrador' : 'Ingresar'}
+                    className="relative p-2 -ml-2 text-white/80 hover:text-white transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    {(clienteSesion || adminSesion) && (
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-white" />
+                    )}
+                  </button>
+                  <Image src="/logo.png" alt="Swami Logo" width={500} height={500} priority className="h-14 w-auto object-contain" />
+                  <div className="hidden md:flex flex-col justify-center">
+                    <h1 className="text-xl font-light tracking-[0.2em] text-white uppercase leading-tight">
+                      Swami
+                    </h1>
+                    <span className="text-[10px] text-orange-100 tracking-[0.3em] uppercase opacity-90">
+                      Distribuidora Mayorista
+                    </span>
+                  </div>
+                </div>
+
                 <button
-                  onClick={() => setMostrarLogin(true)}
-                  aria-label={clienteSesion ? `Mi cuenta: ${clienteSesion.nombre}` : adminSesion ? 'Sesión de administrador' : 'Ingresar'}
-                  className="relative p-2 -ml-2 text-zinc-600 hover:text-orange-500 transition-colors"
+                  onClick={() => setMostrarCarrito(true)}
+                  className="md:hidden relative p-2 text-white/80 hover:text-white transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                  {(clienteSesion || adminSesion) && (
-                    <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-orange-500" />
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                  {carrito.length > 0 && (
+                    <span className="absolute top-0 right-0 bg-white text-orange-700 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                      {carrito.reduce((acc, item) => acc + item.cantidad, 0)}
+                    </span>
                   )}
                 </button>
-                <Image src="/logo.png" alt="Swami Logo" width={500} height={500} priority className="h-14 w-auto object-contain drop-shadow-[0_0_15px_rgba(249,115,22,0.1)]" />
-                <div className="hidden md:flex flex-col justify-center">
-                  <h1 className="text-xl font-light tracking-[0.2em] text-zinc-900 uppercase leading-tight">
-                    Swami
-                  </h1>
-                  <span className="text-[10px] text-orange-600 tracking-[0.3em] uppercase opacity-80">
-                    Distribuidora Mayorista
-                  </span>
+              </div>
+
+              {/* Navegación */}
+              <nav className="hidden md:flex items-center gap-8">
+                <button onClick={irAInicio} className="text-[11px] uppercase tracking-[0.15em] text-white/80 hover:text-white transition-colors">
+                  Inicio
+                </button>
+                <button onClick={irACatalogo} className="text-[11px] uppercase tracking-[0.15em] text-white/80 hover:text-white transition-colors">
+                  Catálogo
+                </button>
+                <button
+                  onClick={irAOfertas}
+                  className={`text-[11px] uppercase tracking-[0.15em] transition-colors ${ofertaFiltro ? 'text-white' : 'text-white/80 hover:text-white'}`}
+                >
+                  Ofertas
+                </button>
+              </nav>
+
+              {/* Buscador y Carrito Desktop */}
+              <div className="w-full md:w-[32rem] flex gap-4 items-center">
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    placeholder="Buscar código, proveedor o descripción..."
+                    value={busqueda}
+                    onChange={(e) => handleBusqueda(e.target.value)}
+                    className="w-full bg-white/15 border border-white/30 rounded-sm px-5 py-3 pl-10 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/70 focus:ring-1 focus:ring-white/30 focus:bg-white/20 transition-all"
+                  />
+                  <svg className="w-4 h-4 text-white/60 absolute left-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </div>
+
+                <button
+                  onClick={() => setMostrarCarrito(true)}
+                  className="hidden md:flex relative items-center justify-center bg-white/15 border border-white/30 p-3 rounded-sm hover:bg-white/25 hover:border-white/50 transition-all group min-w-[46px]"
+                >
+                  <svg className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                  {carrito.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-white text-orange-700 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                      {carrito.reduce((acc, item) => acc + item.cantidad, 0)}
+                    </span>
+                  )}
+                </button>
               </div>
-
-              <button
-                onClick={() => setMostrarCarrito(true)}
-                className="md:hidden relative p-2 text-zinc-600 hover:text-orange-500 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                {carrito.length > 0 && (
-                  <span className="absolute top-0 right-0 bg-orange-500 text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                    {carrito.reduce((acc, item) => acc + item.cantidad, 0)}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Navegación */}
-            <nav className="hidden md:flex items-center gap-8">
-              <button onClick={irAInicio} className="text-[11px] uppercase tracking-[0.15em] text-zinc-600 hover:text-orange-600 transition-colors">
-                Inicio
-              </button>
-              <button onClick={irACatalogo} className="text-[11px] uppercase tracking-[0.15em] text-zinc-600 hover:text-orange-600 transition-colors">
-                Catálogo
-              </button>
-              <button
-                onClick={irAOfertas}
-                className={`text-[11px] uppercase tracking-[0.15em] transition-colors ${ofertaFiltro ? 'text-orange-600' : 'text-zinc-600 hover:text-orange-600'}`}
-              >
-                Ofertas
-              </button>
-            </nav>
-
-            {/* Buscador y Carrito Desktop */}
-            <div className="w-full md:w-[32rem] flex gap-4 items-center">
-              <div className="relative w-full">
-                <input 
-                  type="text" 
-                  placeholder="Buscar código, proveedor o descripción..." 
-                  value={busqueda}
-                  onChange={(e) => handleBusqueda(e.target.value)}
-                  className="w-full bg-zinc-100/30 border border-zinc-200 rounded-sm px-5 py-3 pl-10 text-sm text-zinc-800 placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 focus:bg-zinc-100/80 transition-all"
-                />
-                <svg className="w-4 h-4 text-zinc-400 absolute left-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              </div>
-              
-              <button 
-                onClick={() => setMostrarCarrito(true)}
-                className="hidden md:flex relative items-center justify-center bg-zinc-100 border border-zinc-200 p-3 rounded-sm hover:border-orange-500/50 hover:text-orange-500 transition-all group min-w-[46px]"
-              >
-                <svg className="w-5 h-5 text-zinc-600 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                {carrito.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-orange-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(249,115,22,0.3)]">
-                    {carrito.reduce((acc, item) => acc + item.cantidad, 0)}
-                  </span>
-                )}
-              </button>
             </div>
           </div>
+        </div>
 
-          <div className="flex flex-col md:flex-row md:flex-wrap gap-4 border-t border-zinc-100 pt-6">
+        {/* Franja de filtros: blanca, separada de la banda naranja solo por
+            el cambio de color — sigue el mismo patron que el resto del
+            sitio para delimitar secciones. */}
+        <div className="bg-white border-b-2 border-zinc-300">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex flex-col md:flex-row md:flex-wrap gap-4">
             <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-400 px-0.5">Marca</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 px-0.5">Marca</span>
               <select
                 value={marcaFiltro}
                 onChange={(e) => handleMarca(e.target.value)}
-                className="bg-zinc-50 border border-zinc-200/70 text-zinc-600 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {marcas.filter(m => m.id !== 0).map(m => (
@@ -599,11 +609,11 @@ export default function CatalogoPublico() {
             </div>
 
             <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-400 px-0.5">Rubro</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 px-0.5">Rubro</span>
               <select
                 value={categoriaFiltro}
                 onChange={(e) => handleCategoria(e.target.value)}
-                className="bg-zinc-50 border border-zinc-200/70 text-zinc-600 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {categoriasGenerales.map(c => (
@@ -613,11 +623,11 @@ export default function CatalogoPublico() {
             </div>
 
             <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-400 px-0.5">Subrubro</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 px-0.5">Subrubro</span>
               <select
                 value={rubroFiltro}
                 onChange={(e) => handleRubro(e.target.value)}
-                className="bg-zinc-50 border border-zinc-200/70 text-zinc-600 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {rubros
@@ -630,11 +640,11 @@ export default function CatalogoPublico() {
             </div>
 
             <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-400 px-0.5">Marca Auto</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 px-0.5">Marca Auto</span>
               <select
                 value={vehiculoFiltro}
                 onChange={(e) => handleVehiculo(e.target.value)}
-                className="bg-zinc-50 border border-zinc-200/70 text-zinc-600 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {marcasAuto.map(m => (
@@ -644,12 +654,12 @@ export default function CatalogoPublico() {
             </div>
 
             <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-400 px-0.5">Modelo</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 px-0.5">Modelo</span>
               <select
                 value={modeloAutoFiltro}
                 onChange={(e) => handleModeloAuto(e.target.value)}
                 disabled={!vehiculoFiltro}
-                className="bg-zinc-50 border border-zinc-200/70 text-zinc-600 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <option value="">Todos</option>
                 {modelosAuto
@@ -663,31 +673,33 @@ export default function CatalogoPublico() {
             <button
               onClick={limpiarFiltros}
               disabled={!hayFiltrosActivos}
-              className="text-[11px] uppercase tracking-wider text-zinc-500 border border-zinc-200 px-4 py-2.5 hover:border-orange-500/50 hover:text-orange-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-zinc-200 disabled:hover:text-zinc-500 shrink-0 self-end"
+              className="text-[11px] uppercase tracking-wider text-zinc-600 border border-zinc-400 px-4 py-2.5 hover:border-orange-500 hover:text-orange-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-zinc-400 disabled:hover:text-zinc-500 shrink-0 self-end"
             >
               Limpiar Filtros
             </button>
           </div>
+          </div>
         </div>
       </header>
 
-      {/* FRANJA DE CONFIANZA */}
-      <div className="border-b border-zinc-200/50 bg-zinc-100/20">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-[10px] uppercase tracking-[0.15em] text-zinc-500">
+      {/* FRANJA DE CONFIANZA: banda naranja clara, tono intermedio entre el
+          header solido y el blanco del catalogo. */}
+      <div className="border-b border-orange-300 bg-orange-200">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-[10px] uppercase tracking-[0.15em] font-medium text-orange-900">
           <span className="flex items-center gap-2">
-            <svg className="w-3.5 h-3.5 text-orange-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            <svg className="w-3.5 h-3.5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
             Envíos a todo Córdoba
           </span>
           <span className="flex items-center gap-2">
-            <svg className="w-3.5 h-3.5 text-slate-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+            <svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
             Cotización directa por WhatsApp
           </span>
           <span className="flex items-center gap-2">
-            <svg className="w-3.5 h-3.5 text-orange-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+            <svg className="w-3.5 h-3.5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
             Stock real, actualizado
           </span>
           <span className="flex items-center gap-2">
-            <svg className="w-3.5 h-3.5 text-slate-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            <svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             Atención directa, sin intermediarios
           </span>
         </div>
@@ -695,22 +707,22 @@ export default function CatalogoPublico() {
 
       {/* GRILLA DE PRODUCTOS */}
       <section ref={catalogoRef} className="max-w-7xl mx-auto px-6 py-12 scroll-mt-24">
-        <div className="flex justify-between items-center mb-8 text-[10px] text-zinc-500 uppercase tracking-[0.2em]">
-          <span>Inventario Swami</span>
+        <div className="flex justify-between items-center mb-8 bg-orange-600 text-white text-[10px] uppercase tracking-[0.2em] px-4 py-2.5">
+          <span className="font-medium">Inventario Swami</span>
           <div className="flex items-center gap-6">
             <span>{totalRegistros} repuestos</span>
-            <div className="flex items-center gap-1 border border-zinc-200">
+            <div className="flex items-center gap-1 border border-white/30 rounded-sm overflow-hidden">
               <button
                 onClick={() => setVistaLista(false)}
                 aria-label="Ver en grilla"
-                className={`p-2 transition-colors ${!vistaLista ? 'bg-zinc-100 text-orange-500' : 'text-zinc-400 hover:text-zinc-600'}`}
+                className={`p-2 transition-colors ${!vistaLista ? 'bg-white text-orange-600' : 'text-white/70 hover:text-white'}`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" /></svg>
               </button>
               <button
                 onClick={() => setVistaLista(true)}
                 aria-label="Ver en lista"
-                className={`p-2 transition-colors ${vistaLista ? 'bg-zinc-100 text-orange-500' : 'text-zinc-400 hover:text-zinc-600'}`}
+                className={`p-2 transition-colors ${vistaLista ? 'bg-white text-orange-600' : 'text-white/70 hover:text-white'}`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
               </button>
@@ -721,7 +733,7 @@ export default function CatalogoPublico() {
         {cargando ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: porPagina }).map((_, i) => (
-              <div key={i} className="border border-zinc-200 bg-white p-5 animate-pulse">
+              <div key={i} className="border border-zinc-300 bg-white p-5 animate-pulse">
                 <div className="aspect-square w-full bg-zinc-200 mb-5" />
                 <div className="h-2 w-1/3 bg-zinc-200 mb-3" />
                 <div className="h-3 w-full bg-zinc-200 mb-2" />
@@ -739,16 +751,16 @@ export default function CatalogoPublico() {
         ) : (
           <>
             {vistaLista ? (
-            <div className="overflow-x-auto border border-zinc-200 bg-white shadow-sm">
+            <div className="overflow-x-auto border border-zinc-300 bg-white shadow-sm">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                    <th className="text-left font-normal px-4 py-3">Código</th>
-                    <th className="text-left font-normal px-4 py-3">Descripción</th>
-                    <th className="text-left font-normal px-4 py-3 hidden md:table-cell">Marca</th>
-                    <th className="text-left font-normal px-4 py-3 hidden md:table-cell">Rubro</th>
-                    <th className="text-right font-normal px-4 py-3">Precio</th>
-                    <th className="text-right font-normal px-4 py-3"></th>
+                  <tr className="bg-orange-50 border-b-2 border-orange-300 text-[10px] uppercase tracking-[0.2em] text-orange-900">
+                    <th className="text-left font-semibold px-4 py-3">Código</th>
+                    <th className="text-left font-semibold px-4 py-3">Descripción</th>
+                    <th className="text-left font-semibold px-4 py-3 hidden md:table-cell">Marca</th>
+                    <th className="text-left font-semibold px-4 py-3 hidden md:table-cell">Rubro</th>
+                    <th className="text-right font-semibold px-4 py-3">Precio</th>
+                    <th className="text-right font-semibold px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -756,7 +768,7 @@ export default function CatalogoPublico() {
                     <tr
                       key={item.id}
                       onClick={() => setArticuloSeleccionado(item)}
-                      className="border-b border-zinc-100 last:border-b-0 hover:bg-zinc-100/50 cursor-pointer transition-colors"
+                      className="border-b border-zinc-300 last:border-b-0 odd:bg-white even:bg-zinc-50 hover:bg-orange-50 cursor-pointer transition-colors"
                     >
                       <td className="px-4 py-3 text-orange-600 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
                       <td className="px-4 py-3 text-zinc-900 font-light">{descripcionMostrada(item)}</td>
@@ -780,7 +792,7 @@ export default function CatalogoPublico() {
                           </button>
                           <button
                             onClick={(e) => agregarAlCarrito(item, e)}
-                            className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-medium text-zinc-900 bg-zinc-100 border border-zinc-200 hover:bg-orange-500 hover:text-black hover:border-orange-500 px-3 py-2 transition-all whitespace-nowrap"
+                            className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-semibold text-white bg-orange-600 hover:bg-orange-700 px-3 py-2 transition-all whitespace-nowrap"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                             Agregar
@@ -798,11 +810,11 @@ export default function CatalogoPublico() {
                 <article
                   key={item.id}
                   onClick={() => setArticuloSeleccionado(item)}
-                  className="group relative border border-zinc-200 bg-white p-5 shadow-sm hover:border-orange-500/30 hover:shadow-md hover:shadow-orange-500/10 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                  className="group relative border border-zinc-300 bg-white p-5 shadow-sm hover:border-orange-500/30 hover:shadow-md hover:shadow-orange-500/10 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
                 >
                   <div>
                     {/* Contenedor de Imagen con URL Dinámica Supabase */}
-                    <div className="relative aspect-square w-full bg-zinc-50 border border-zinc-200/50 mb-5 flex items-center justify-center overflow-hidden group-hover:border-orange-500/20 transition-colors">
+                    <div className="relative aspect-square w-full bg-zinc-50 border border-zinc-300/50 mb-5 flex items-center justify-center overflow-hidden group-hover:border-orange-500/20 transition-colors">
                       <Image
                         src={`${SUPABASE_STORAGE_URL}/${item.codigo}.jpg`}
                         alt={descripcionMostrada(item)}
@@ -834,13 +846,13 @@ export default function CatalogoPublico() {
                     </h2>
                   </div>
                   
-                  <div className="flex items-center justify-between border-t border-zinc-200/50 pt-4 mt-4">
+                  <div className="flex items-center justify-between border-t border-zinc-300/50 pt-4 mt-4">
                     <span className="text-lg font-light text-zinc-900 tracking-wide group-hover:text-orange-600 transition-colors">
                       ${item.precio_1.toLocaleString('es-AR')}
                     </span>
                     <button
                       onClick={(e) => agregarAlCarrito(item, e)}
-                      className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-medium text-zinc-900 bg-zinc-100 border border-zinc-200 group-hover:border-orange-500/50 hover:bg-orange-500 hover:text-black hover:border-orange-500 px-4 py-2 transition-all shrink-0"
+                      className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-semibold text-white bg-orange-600 hover:bg-orange-700 px-4 py-2 transition-all shrink-0"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                       Agregar
@@ -853,11 +865,11 @@ export default function CatalogoPublico() {
 
             {/* CONTROLES DE PAGINACIÓN */}
             {totalPaginas > 1 && (
-              <div className="flex justify-center items-center gap-6 mt-16 pt-8 border-t border-zinc-100">
+              <div className="flex justify-center items-center gap-6 mt-16 pt-8 border-t border-zinc-300">
                 <button 
                   onClick={() => cambiarPagina(paginaActual - 1)}
                   disabled={paginaActual === 1}
-                  className="px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] bg-transparent border border-zinc-200 text-zinc-600 hover:border-orange-500/50 hover:text-orange-600 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                  className="px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] bg-transparent border border-zinc-300 text-zinc-600 hover:border-orange-500/50 hover:text-orange-600 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
                 >
                   Anterior
                 </button>
@@ -869,7 +881,7 @@ export default function CatalogoPublico() {
                 <button 
                   onClick={() => cambiarPagina(paginaActual + 1)}
                   disabled={paginaActual === totalPaginas}
-                  className="px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] bg-transparent border border-zinc-200 text-zinc-600 hover:border-orange-500/50 hover:text-orange-600 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                  className="px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] bg-transparent border border-zinc-300 text-zinc-600 hover:border-orange-500/50 hover:text-orange-600 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
                 >
                   Siguiente
                 </button>
@@ -888,10 +900,10 @@ export default function CatalogoPublico() {
             className="absolute inset-0 bg-black/90 backdrop-blur-md transition-opacity" 
             onClick={() => setArticuloSeleccionado(null)} 
           />
-          <div className="relative bg-white border border-zinc-200 w-full max-w-4xl flex flex-col md:flex-row shadow-2xl max-h-[90vh] overflow-hidden">
+          <div className="relative bg-white border border-zinc-300 w-full max-w-4xl flex flex-col md:flex-row shadow-2xl max-h-[90vh] overflow-hidden">
 
             {/* Mitad Imagen */}
-            <div className="w-full md:w-1/2 bg-zinc-100 border-b md:border-b-0 md:border-r border-zinc-200 aspect-square md:aspect-auto flex items-center justify-center relative p-8">
+            <div className="w-full md:w-1/2 bg-zinc-100 border-b md:border-b-0 md:border-r border-zinc-300 aspect-square md:aspect-auto flex items-center justify-center relative p-8">
               <Image
                 src={`${SUPABASE_STORAGE_URL}/${articuloSeleccionado.codigo}.jpg`}
                 alt={descripcionMostrada(articuloSeleccionado)}
@@ -925,7 +937,7 @@ export default function CatalogoPublico() {
                     CÓD: {articuloSeleccionado.codigo}
                   </span>
                   {articuloSeleccionado.codigo_proveedor && !proveedoresSinRef.includes(articuloSeleccionado.id_proveedor ?? -1) && (
-                    <span className="px-3 py-1 bg-zinc-100 border border-zinc-200 text-[10px] font-mono text-zinc-500 tracking-wider">
+                    <span className="px-3 py-1 bg-zinc-100 border border-zinc-300 text-[10px] font-mono text-zinc-500 tracking-wider">
                       REF: {articuloSeleccionado.codigo_proveedor}
                     </span>
                   )}
@@ -957,7 +969,7 @@ export default function CatalogoPublico() {
                 </div>
               </div>
 
-              <div className="mt-auto pt-8 border-t border-zinc-100 flex items-center justify-between">
+              <div className="mt-auto pt-8 border-t border-zinc-300 flex items-center justify-between">
                 <div className="flex flex-col">
                   <span className="text-[10px] text-orange-600 uppercase tracking-widest mb-1">Precio Mayorista</span>
                   <span className="text-3xl font-light text-zinc-900 tracking-wide">
@@ -967,7 +979,7 @@ export default function CatalogoPublico() {
                 
                 <button 
                   onClick={() => agregarAlCarrito(articuloSeleccionado)}
-                  className="bg-zinc-900 hover:bg-orange-500 text-white hover:text-black px-8 py-4 text-xs uppercase tracking-[0.2em] font-medium transition-colors"
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 text-xs uppercase tracking-[0.2em] font-medium transition-colors"
                 >
                   Agregar
                 </button>
@@ -981,8 +993,8 @@ export default function CatalogoPublico() {
       {mostrarLogin && (
         <>
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity" onClick={() => setMostrarLogin(false)} />
-          <div className="fixed top-0 left-0 h-full w-full max-w-sm bg-zinc-50 border-r border-zinc-100 z-50 flex flex-col shadow-2xl">
-            <div className="p-8 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+          <div className="fixed top-0 left-0 h-full w-full max-w-sm bg-zinc-50 border-r border-zinc-300 z-50 flex flex-col shadow-2xl">
+            <div className="p-8 border-b border-zinc-300 flex justify-between items-center bg-zinc-50/50">
               <h2 className="text-sm font-light tracking-[0.3em] text-zinc-900 uppercase">
                 {clienteSesion || adminSesion ? 'Mi cuenta' : 'Ingresar'}
               </h2>
@@ -1002,7 +1014,7 @@ export default function CatalogoPublico() {
                   )}
                   <button
                     onClick={handleLogoutSesion}
-                    className="w-full border border-zinc-200 text-zinc-600 py-3 text-xs uppercase tracking-widest hover:border-orange-500/50 hover:text-orange-600 transition-colors"
+                    className="w-full border border-zinc-300 text-zinc-600 py-3 text-xs uppercase tracking-widest hover:border-orange-500/50 hover:text-orange-600 transition-colors"
                   >
                     Cerrar sesión
                   </button>
@@ -1014,13 +1026,13 @@ export default function CatalogoPublico() {
                   </p>
                   <Link
                     href="/admin"
-                    className="block text-center w-full bg-zinc-900 hover:bg-orange-500 text-white hover:text-black text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors"
+                    className="block text-center w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors"
                   >
                     Ir al panel administrador
                   </Link>
                   <button
                     onClick={handleLogoutSesion}
-                    className="w-full border border-zinc-200 text-zinc-600 py-3 text-xs uppercase tracking-widest hover:border-orange-500/50 hover:text-orange-600 transition-colors"
+                    className="w-full border border-zinc-300 text-zinc-600 py-3 text-xs uppercase tracking-widest hover:border-orange-500/50 hover:text-orange-600 transition-colors"
                   >
                     Cerrar sesión
                   </button>
@@ -1037,7 +1049,7 @@ export default function CatalogoPublico() {
                       required
                       value={emailLogin}
                       onChange={(e) => setEmailLogin(e.target.value)}
-                      className="w-full bg-white border border-zinc-200 rounded-sm px-4 py-3 text-sm text-zinc-800 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                      className="w-full bg-white border border-zinc-300 rounded-sm px-4 py-3 text-sm text-zinc-800 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
                     />
                   </div>
                   <div>
@@ -1047,14 +1059,14 @@ export default function CatalogoPublico() {
                       required
                       value={passwordLogin}
                       onChange={(e) => setPasswordLogin(e.target.value)}
-                      className="w-full bg-white border border-zinc-200 rounded-sm px-4 py-3 text-sm text-zinc-800 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                      className="w-full bg-white border border-zinc-300 rounded-sm px-4 py-3 text-sm text-zinc-800 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
                     />
                   </div>
                   {errorLogin && <p className="text-xs text-red-500">{errorLogin}</p>}
                   <button
                     type="submit"
                     disabled={cargandoLogin}
-                    className="w-full bg-zinc-900 hover:bg-orange-500 text-white hover:text-black text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed"
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed"
                   >
                     {cargandoLogin ? 'Ingresando...' : 'Ingresar'}
                   </button>
@@ -1069,8 +1081,8 @@ export default function CatalogoPublico() {
       {mostrarCarrito && (
         <>
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity" onClick={() => setMostrarCarrito(false)} />
-          <div className="fixed top-0 right-0 h-full w-full max-w-md bg-zinc-50 border-l border-zinc-100 z-50 flex flex-col shadow-2xl">
-            <div className="p-8 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+          <div className="fixed top-0 right-0 h-full w-full max-w-md bg-zinc-50 border-l border-zinc-300 z-50 flex flex-col shadow-2xl">
+            <div className="p-8 border-b border-zinc-300 flex justify-between items-center bg-zinc-50/50">
               <h2 className="text-sm font-light tracking-[0.3em] text-zinc-900 uppercase">Tu Cotización</h2>
               <button onClick={() => setMostrarCarrito(false)} className="text-zinc-400 hover:text-orange-500 transition-colors p-2">✕</button>
             </div>
@@ -1080,7 +1092,7 @@ export default function CatalogoPublico() {
                 <div className="text-center text-zinc-400 text-[10px] mt-10 uppercase tracking-[0.2em]">La lista está vacía</div>
               ) : (
                 carrito.map(item => (
-                  <div key={item.id} className="flex flex-col gap-4 p-5 bg-zinc-50 border border-zinc-200/50 hover:border-orange-500/30 transition-colors">
+                  <div key={item.id} className="flex flex-col gap-4 p-5 bg-zinc-50 border border-zinc-300/50 hover:border-orange-500/30 transition-colors">
                     <div className="flex justify-between items-start">
                       <div className="pr-4">
                         <span className="text-[10px] text-orange-600 font-mono block mb-2">{item.codigo}</span>
@@ -1091,8 +1103,8 @@ export default function CatalogoPublico() {
                       </button>
                     </div>
                     
-                    <div className="flex justify-between items-center mt-2 pt-4 border-t border-zinc-100">
-                      <div className="flex items-center gap-4 border border-zinc-200 p-1">
+                    <div className="flex justify-between items-center mt-2 pt-4 border-t border-zinc-300">
+                      <div className="flex items-center gap-4 border border-zinc-300 p-1">
                         <button onClick={() => cambiarCantidad(item.id, -1)} className="px-3 text-zinc-500 hover:text-orange-500 transition-colors">-</button>
                         <span className="text-xs font-mono w-4 text-center text-zinc-900">{item.cantidad}</span>
                         <button onClick={() => cambiarCantidad(item.id, 1)} className="px-3 text-zinc-500 hover:text-orange-500 transition-colors">+</button>
@@ -1104,7 +1116,7 @@ export default function CatalogoPublico() {
               )}
             </div>
 
-            <div className="p-8 bg-zinc-50 border-t border-zinc-100">
+            <div className="p-8 bg-zinc-50 border-t border-zinc-300">
               <div className="flex justify-between items-end mb-8">
                 <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Total Estimado</span>
                 <span className="text-2xl font-light text-orange-600 tracking-wide">${totalCarrito.toLocaleString('es-AR')}</span>
@@ -1113,7 +1125,7 @@ export default function CatalogoPublico() {
               <button 
                 onClick={enviarWhatsApp}
                 disabled={carrito.length === 0}
-                className="w-full bg-zinc-900 hover:bg-orange-500 text-white hover:text-black text-xs font-medium uppercase tracking-[0.2em] py-5 transition-colors flex items-center justify-center gap-2 disabled:bg-zinc-100 disabled:text-zinc-300 disabled:cursor-not-allowed"
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium uppercase tracking-[0.2em] py-5 transition-colors flex items-center justify-center gap-2 disabled:bg-zinc-100 disabled:text-zinc-300 disabled:cursor-not-allowed"
               >
                 Solicitar Cotización
               </button>
@@ -1122,19 +1134,19 @@ export default function CatalogoPublico() {
         </>
       )}
 
-      {/* FOOTER */}
-      <footer className="relative border-t border-zinc-200/50 mt-8">
-        {/* Línea doble: los dos acentos del sitio (ámbar y acero) uniéndose
-            en el cierre de la página, sin agregar más textura que eso. */}
-        <div aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-orange-500 via-orange-500/60 to-slate-400" />
+      {/* FOOTER: banda oscura, cierra el sitio con el mismo peso de color
+          con el que abre el header (naranja fuerte arriba, carbon con
+          acento naranja abajo). */}
+      <footer className="relative bg-zinc-900 mt-8">
+        <div aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-orange-600 via-orange-400 to-orange-600" />
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-          <span className="text-[10px] text-zinc-300 uppercase tracking-[0.2em]">
+          <span className="text-[10px] text-zinc-400 uppercase tracking-[0.2em]">
             Swami Distribuidora Mayorista
           </span>
           <Link
             href="/admin"
             aria-label="Acceso administrador"
-            className="text-zinc-200 hover:text-zinc-500 transition-colors"
+            className="text-zinc-500 hover:text-orange-400 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
           </Link>
