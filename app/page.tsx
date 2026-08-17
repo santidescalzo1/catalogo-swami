@@ -602,7 +602,7 @@ export default function CatalogoPublico() {
             </div>
 
             <div className="flex-1 min-w-[140px] flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Vehículo</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 px-0.5">Marca Auto</span>
               <select
                 value={vehiculoFiltro}
                 onChange={(e) => handleVehiculo(e.target.value)}
@@ -752,9 +752,10 @@ export default function CatalogoPublico() {
                           </button>
                           <button
                             onClick={(e) => agregarAlCarrito(item, e)}
-                            className="text-[9px] uppercase tracking-[0.2em] font-medium text-zinc-300 bg-zinc-900 border border-zinc-800 hover:bg-orange-500 hover:text-black hover:border-orange-500 px-3 py-2 transition-all whitespace-nowrap"
+                            className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-medium text-zinc-300 bg-zinc-900 border border-zinc-800 hover:bg-orange-500 hover:text-black hover:border-orange-500 px-3 py-2 transition-all whitespace-nowrap"
                           >
-                            Sumar
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                            Agregar
                           </button>
                         </div>
                       </td>
@@ -811,9 +812,10 @@ export default function CatalogoPublico() {
                     </span>
                     <button
                       onClick={(e) => agregarAlCarrito(item, e)}
-                      className="text-[9px] uppercase tracking-[0.2em] font-medium text-zinc-300 bg-zinc-900 border border-zinc-800 group-hover:border-orange-500/50 hover:bg-orange-500 hover:text-black hover:border-orange-500 px-4 py-2 transition-all shrink-0"
+                      className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-medium text-zinc-300 bg-zinc-900 border border-zinc-800 group-hover:border-orange-500/50 hover:bg-orange-500 hover:text-black hover:border-orange-500 px-4 py-2 transition-all shrink-0"
                     >
-                      Sumar
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                      Agregar
                     </button>
                   </div>
                 </article>
