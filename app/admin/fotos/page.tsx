@@ -81,6 +81,9 @@ export default function SubirFotos() {
             <Link href="/admin/articulos" className="text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest transition-colors">
               Editar artículos
             </Link>
+            <Link href="/" className="text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest transition-colors">
+              Ver catálogo
+            </Link>
             <button onClick={handleLogout} className="text-xs text-zinc-600 hover:text-orange-500 uppercase tracking-widest transition-colors">
               Cerrar sesión
             </button>

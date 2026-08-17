@@ -131,15 +131,22 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-black text-zinc-300 flex flex-col items-center justify-center p-6 font-sans">
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center relative">
-          <h1 className="text-3xl font-light tracking-tight text-white mb-2">Swami Autopartes</h1>
-          <p className="text-sm text-zinc-500 uppercase tracking-widest">Panel de Sincronización</p>
-          <button
-            onClick={handleLogout}
-            className="absolute top-0 right-0 text-xs text-zinc-600 hover:text-orange-500 transition-colors uppercase tracking-widest"
-          >
-            Cerrar sesión
-          </button>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-light tracking-tight text-white mb-2">Swami Autopartes</h1>
+            <p className="text-sm text-zinc-500 uppercase tracking-widest">Panel de Sincronización</p>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link href="/" className="text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest transition-colors">
+              Ver catálogo
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="text-xs text-zinc-600 hover:text-orange-500 transition-colors uppercase tracking-widest"
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
 
         <Link

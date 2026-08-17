@@ -216,6 +216,9 @@ export default function EditarArticulos() {
             <Link href="/admin/fotos" className="text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest transition-colors">
               Subir fotos
             </Link>
+            <Link href="/" className="text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest transition-colors">
+              Ver catálogo
+            </Link>
             <button onClick={handleLogout} className="text-xs text-zinc-600 hover:text-orange-500 uppercase tracking-widest transition-colors">
               Cerrar sesión
             </button>
