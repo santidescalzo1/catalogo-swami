@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+import MotorExplosivo from '@/components/MotorExplosivo'
 
 const SUPABASE_STORAGE_URL = 'https://rhdxfpkrxeuymihhkyxo.supabase.co/storage/v1/object/public/repuestos'
 
@@ -414,7 +415,16 @@ export default function CatalogoPublico() {
   const totalPaginas = Math.ceil(totalRegistros / porPagina)
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-300 font-sans selection:bg-orange-500/30 overflow-x-hidden">
+    <main className="relative min-h-screen bg-[#0d0c0b] text-zinc-300 font-sans selection:bg-orange-500/30 overflow-x-hidden">
+
+      {/* AMBIENTE DE COLOR: la base sigue siendo oscura, pero deja de ser un
+          negro plano — dos resplandores muy tenues (ámbar y acero) le dan
+          profundidad sin competir con el contenido. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-[34rem] h-[34rem] rounded-full bg-orange-600/[0.07] blur-[130px]" />
+        <div className="absolute top-[55%] -left-40 w-[30rem] h-[30rem] rounded-full bg-slate-500/[0.06] blur-[130px]" />
+        <div className="absolute bottom-0 right-1/4 w-[26rem] h-[26rem] rounded-full bg-orange-900/[0.06] blur-[110px]" />
+      </div>
 
       {/* BARRA DE ANUNCIOS */}
       <div className="bg-gradient-to-r from-zinc-950 via-orange-950/40 to-zinc-950 border-b border-zinc-900">
@@ -424,7 +434,29 @@ export default function CatalogoPublico() {
       </div>
 
       {/* HEADER */}
-      <header className="border-b border-zinc-800/50 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-20">
+      <header className="relative border-b border-zinc-800/50 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-20 overflow-hidden">
+        {/* Marca de agua: engranaje de línea, un guiño discreto al rubro sin
+            caer en foto de stock — se recorta y se apaga en pantallas chicas. */}
+        <svg
+          aria-hidden
+          viewBox="0 0 200 200"
+          className="hidden lg:block pointer-events-none absolute -top-16 -right-16 w-64 h-64 text-slate-500/[0.07]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.2}
+        >
+          <circle cx={100} cy={100} r={52} />
+          <circle cx={100} cy={100} r={14} />
+          {Array.from({ length: 12 }, (_, i) => {
+            const ang = (Math.PI * 2 * i) / 12
+            const x1 = (100 + 52 * Math.cos(ang)).toFixed(2)
+            const y1 = (100 + 52 * Math.sin(ang)).toFixed(2)
+            const x2 = (100 + 68 * Math.cos(ang)).toFixed(2)
+            const y2 = (100 + 68 * Math.sin(ang)).toFixed(2)
+            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />
+          })}
+        </svg>
+
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
 
@@ -604,7 +636,7 @@ export default function CatalogoPublico() {
             Envíos a todo Córdoba
           </span>
           <span className="flex items-center gap-2">
-            <svg className="w-3.5 h-3.5 text-orange-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+            <svg className="w-3.5 h-3.5 text-slate-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
             Cotización directa por WhatsApp
           </span>
           <span className="flex items-center gap-2">
@@ -612,7 +644,7 @@ export default function CatalogoPublico() {
             Stock real, actualizado
           </span>
           <span className="flex items-center gap-2">
-            <svg className="w-3.5 h-3.5 text-orange-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            <svg className="w-3.5 h-3.5 text-slate-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             Atención directa, sin intermediarios
           </span>
         </div>
@@ -801,6 +833,8 @@ export default function CatalogoPublico() {
           </>
         )}
       </section>
+
+      <MotorExplosivo />
 
       {/* MODAL DE PRODUCTO (VISTA AMPLIADA) */}
       {articuloSeleccionado && (
