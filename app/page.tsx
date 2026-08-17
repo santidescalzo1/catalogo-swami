@@ -435,6 +435,21 @@ export default function CatalogoPublico() {
 
       {/* HEADER */}
       <header className="relative border-b border-zinc-800/50 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-20 overflow-hidden">
+        {/* Plano de motor: grilla de plano técnico que se apaga hacia los
+            bordes, para que el header se sienta como una hoja de diagramas
+            en vez de un fondo plano — conecta con el motor animado de abajo. */}
+        <div
+          aria-hidden
+          className="hidden lg:block pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(148,163,184,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.07) 1px, transparent 1px)',
+            backgroundSize: '26px 26px',
+            maskImage: 'radial-gradient(ellipse 70% 100% at 50% 0%, black 40%, transparent 90%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 70% 100% at 50% 0%, black 40%, transparent 90%)',
+          }}
+        />
+
         {/* Marca de agua: engranaje de línea, un guiño discreto al rubro sin
             caer en foto de stock — se recorta y se apaga en pantallas chicas. */}
         <svg
@@ -1066,7 +1081,10 @@ export default function CatalogoPublico() {
       )}
 
       {/* FOOTER */}
-      <footer className="border-t border-zinc-800/50 mt-8">
+      <footer className="relative border-t border-zinc-800/50 mt-8">
+        {/* Línea doble: los dos acentos del sitio (ámbar y acero) uniéndose
+            en el cierre de la página, sin agregar más textura que eso. */}
+        <div aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-orange-500 via-orange-500/60 to-slate-400" />
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <span className="text-[10px] text-zinc-700 uppercase tracking-[0.2em]">
             Swami Distribuidora Mayorista
