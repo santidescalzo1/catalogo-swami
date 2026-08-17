@@ -14,6 +14,7 @@ interface Articulo {
   descripcion: string;
   descripcion_estandarizada?: string | null;
   codigo_proveedor?: string;
+  id_proveedor?: number;
   precio_1: number;
   marcas?: { descripcion: string } | null;
   rubros?: { descripcion: string } | null;
@@ -48,7 +49,7 @@ export default function CatalogoPublico() {
   const [rubros, setRubros] = useState<Rubro[]>([])
   const [categoriasGenerales, setCategoriasGenerales] = useState<Categoria[]>([])
   const rubrosRef = useRef<Rubro[]>([])
-  const proveedoresOcultosRef = useRef<number[]>([])
+  const [proveedoresSinRef, setProveedoresSinRef] = useState<number[]>([])
 
   const [marcasAuto, setMarcasAuto] = useState<Categoria[]>([])
   const [modelosAuto, setModelosAuto] = useState<ModeloAuto[]>([])
@@ -193,14 +194,8 @@ export default function CatalogoPublico() {
 
     let query = supabase
       .from('articulos')
-      .select(`id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, precio_1, marcas(descripcion), rubros(descripcion)${seleccionVehiculo}`, { count: 'exact' })
+      .select(`id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_proveedor, precio_1, marcas(descripcion), rubros(descripcion)${seleccionVehiculo}`, { count: 'exact' })
       .gt('precio_1', 0)
-
-    // Proveedores marcados como ocultos (ej. Expoyer, Altamira) no se
-    // muestran en el catálogo público, aunque el artículo siga activo.
-    if (proveedoresOcultosRef.current.length > 0) {
-      query = query.not('id_proveedor', 'in', `(${proveedoresOcultosRef.current.join(',')})`)
-    }
 
     const limpio = termino.trim()
     if (limpio.length >= 2) {
@@ -270,7 +265,7 @@ export default function CatalogoPublico() {
       const { data: dataMarcas } = await supabase.from('marcas').select('*').order('descripcion')
       const { data: dataRubros } = await supabase.from('rubros').select('*').order('descripcion')
       const { data: dataCategorias } = await supabase.from('categorias_generales').select('*').order('descripcion')
-      const { data: dataProveedoresOcultos } = await supabase.from('proveedores').select('id').eq('oculto', true)
+      const { data: dataProveedoresSinRef } = await supabase.from('proveedores').select('id').eq('ocultar_codigo_proveedor', true)
       // Vistas que solo devuelven marcas/modelos con al menos un artículo
       // asociado (ver supabase/marca-modelo-auto-vistas-filtradas.sql) —
       // así el filtro no muestra marcas vacías, y se actualiza solo si se
@@ -284,7 +279,7 @@ export default function CatalogoPublico() {
         rubrosRef.current = dataRubros
       }
       if (dataCategorias) setCategoriasGenerales(dataCategorias)
-      if (dataProveedoresOcultos) proveedoresOcultosRef.current = dataProveedoresOcultos.map(p => p.id)
+      if (dataProveedoresSinRef) setProveedoresSinRef(dataProveedoresSinRef.map(p => p.id))
       if (dataMarcasAuto) setMarcasAuto(dataMarcasAuto)
       if (dataModelosAuto) setModelosAuto(dataModelosAuto)
 
@@ -850,7 +845,7 @@ export default function CatalogoPublico() {
                   <span className="px-3 py-1 bg-orange-500/10 border border-orange-500/20 text-[10px] font-mono text-orange-400 tracking-wider">
                     CÓD: {articuloSeleccionado.codigo}
                   </span>
-                  {articuloSeleccionado.codigo_proveedor && (
+                  {articuloSeleccionado.codigo_proveedor && !proveedoresSinRef.includes(articuloSeleccionado.id_proveedor ?? -1) && (
                     <span className="px-3 py-1 bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-500 tracking-wider">
                       REF: {articuloSeleccionado.codigo_proveedor}
                     </span>
