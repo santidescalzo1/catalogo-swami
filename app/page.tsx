@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 
 const SUPABASE_STORAGE_URL = 'https://rhdxfpkrxeuymihhkyxo.supabase.co/storage/v1/object/public/repuestos'
@@ -72,7 +73,15 @@ export default function CatalogoPublico() {
   const primerRenderCarrito = useRef(true)
 
   const [articuloSeleccionado, setArticuloSeleccionado] = useState<Articulo | null>(null)
-  const [vistaLista, setVistaLista] = useState(false)
+  const [vistaLista, setVistaLista] = useState(true)
+
+  const router = useRouter()
+  const [mostrarLogin, setMostrarLogin] = useState(false)
+  const [emailLogin, setEmailLogin] = useState('')
+  const [passwordLogin, setPasswordLogin] = useState('')
+  const [errorLogin, setErrorLogin] = useState('')
+  const [cargandoLogin, setCargandoLogin] = useState(false)
+  const [clienteSesion, setClienteSesion] = useState<{ nombre: string; descuento_pct: number } | null>(null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -98,6 +107,66 @@ export default function CatalogoPublico() {
     }
     localStorage.setItem('swami_carrito', JSON.stringify(carrito))
   }, [carrito])
+
+  useEffect(() => {
+    const restaurarSesion = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const { data: cliente } = await supabase
+        .from('clientes')
+        .select('nombre, descuento_pct')
+        .eq('id', session.user.id)
+        .maybeSingle()
+      if (cliente) setClienteSesion(cliente)
+    }
+    restaurarSesion()
+  }, [])
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErrorLogin('')
+    setCargandoLogin(true)
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email: emailLogin, password: passwordLogin })
+    if (error || !data.user) {
+      setErrorLogin('Usuario o contraseña incorrectos.')
+      setCargandoLogin(false)
+      return
+    }
+
+    const { data: cliente } = await supabase
+      .from('clientes')
+      .select('nombre, descuento_pct')
+      .eq('id', data.user.id)
+      .maybeSingle()
+
+    if (cliente) {
+      setClienteSesion(cliente)
+      setMostrarLogin(false)
+      setEmailLogin('')
+      setPasswordLogin('')
+      setCargandoLogin(false)
+      return
+    }
+
+    const { data: esAdmin } = await supabase.from('admins').select('id').eq('id', data.user.id).maybeSingle()
+    if (esAdmin) {
+      router.push('/admin')
+      return
+    }
+
+    // Cuenta valida pero sin perfil de cliente ni de admin: no deberia
+    // pasar en el uso normal, pero si pasa no la dejamos "logueada" a
+    // medias.
+    setErrorLogin('Esta cuenta no está habilitada. Contactá al administrador.')
+    await supabase.auth.signOut()
+    setCargandoLogin(false)
+  }
+
+  const handleLogoutCliente = async () => {
+    await supabase.auth.signOut()
+    setClienteSesion(null)
+  }
 
   const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idCategoria: string, idRubro: string, idVehiculo: string, idModeloAuto: string, soloOferta: boolean, pagina: number) => {
     setCargando(true)
@@ -348,6 +417,16 @@ export default function CatalogoPublico() {
             {/* Título y Logo */}
             <div className="flex items-center justify-between w-full md:w-auto gap-4">
               <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setMostrarLogin(true)}
+                  aria-label={clienteSesion ? `Mi cuenta: ${clienteSesion.nombre}` : 'Ingresar'}
+                  className="relative p-2 -ml-2 text-zinc-400 hover:text-orange-500 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                  {clienteSesion && (
+                    <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-orange-500" />
+                  )}
+                </button>
                 <Image src="/logo.png" alt="Swami Logo" width={500} height={500} priority className="h-14 w-auto object-contain drop-shadow-[0_0_15px_rgba(249,115,22,0.1)]" />
                 <div className="hidden md:flex flex-col justify-center">
                   <h1 className="text-xl font-light tracking-[0.2em] text-white uppercase leading-tight">
@@ -791,6 +870,76 @@ export default function CatalogoPublico() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* PANEL LATERAL DE INGRESO */}
+      {mostrarLogin && (
+        <>
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity" onClick={() => setMostrarLogin(false)} />
+          <div className="fixed top-0 left-0 h-full w-full max-w-sm bg-zinc-950 border-r border-zinc-900 z-50 flex flex-col shadow-2xl">
+            <div className="p-8 border-b border-zinc-900 flex justify-between items-center bg-zinc-950/50">
+              <h2 className="text-sm font-light tracking-[0.3em] text-white uppercase">
+                {clienteSesion ? 'Mi cuenta' : 'Ingresar'}
+              </h2>
+              <button onClick={() => setMostrarLogin(false)} className="text-zinc-600 hover:text-orange-500 transition-colors p-2">✕</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8">
+              {clienteSesion ? (
+                <div className="space-y-6">
+                  <p className="text-sm text-zinc-400">
+                    Hola, <span className="text-white">{clienteSesion.nombre}</span>.
+                  </p>
+                  {clienteSesion.descuento_pct > 0 && (
+                    <p className="text-xs text-orange-400 uppercase tracking-widest">
+                      Descuento asignado: {clienteSesion.descuento_pct}%
+                    </p>
+                  )}
+                  <button
+                    onClick={handleLogoutCliente}
+                    className="w-full border border-zinc-800 text-zinc-400 py-3 text-xs uppercase tracking-widest hover:border-orange-500/50 hover:text-orange-400 transition-colors"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleLogin} className="space-y-5">
+                  <p className="text-xs text-zinc-500 leading-relaxed mb-2">
+                    Acceso para clientes con cuenta habilitada por Swami.
+                  </p>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={emailLogin}
+                      onChange={(e) => setEmailLogin(e.target.value)}
+                      className="w-full bg-black border border-zinc-800 rounded-sm px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Contraseña</label>
+                    <input
+                      type="password"
+                      required
+                      value={passwordLogin}
+                      onChange={(e) => setPasswordLogin(e.target.value)}
+                      className="w-full bg-black border border-zinc-800 rounded-sm px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                    />
+                  </div>
+                  {errorLogin && <p className="text-xs text-red-500">{errorLogin}</p>}
+                  <button
+                    type="submit"
+                    disabled={cargandoLogin}
+                    className="w-full bg-white hover:bg-orange-500 text-black text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors disabled:bg-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed"
+                  >
+                    {cargandoLogin ? 'Ingresando...' : 'Ingresar'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </>
       )}
 
       {/* PANEL LATERAL DEL CARRITO */}

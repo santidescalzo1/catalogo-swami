@@ -4,8 +4,10 @@ import { cookies } from 'next/headers'
 import { crearClienteAdmin } from '@/lib/supabase/admin'
 
 // proxy.ts protege /admin/:path* pero NO /api/*, así que esta ruta se
-// protege sola: sin sesión válida no llega a usar el cliente admin
-// (service_role), que bypasea RLS por completo.
+// protege sola: sin ser admin no llega a usar el cliente admin
+// (service_role), que bypasea RLS por completo. "Hay sesión válida" no
+// alcanza — desde que existe login de clientes en el catálogo público,
+// una sesión válida puede ser perfectamente un cliente, no el admin.
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -26,6 +28,11 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
+  const { data: esAdmin } = await supabase.from('admins').select('id').eq('id', user.id).maybeSingle()
+  if (!esAdmin) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
   const formData = await request.formData()

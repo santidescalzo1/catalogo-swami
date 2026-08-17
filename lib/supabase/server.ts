@@ -25,5 +25,15 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  return { response, user }
+  // Hay sesion valida (user) no alcanza para dejar entrar a /admin: desde
+  // que existe login de clientes en el catalogo publico, "hay sesion"
+  // puede ser perfectamente un cliente logueado, no el admin. Se chequea
+  // pertenencia explicita a la tabla admins (ver supabase/admins-clientes-y-seguridad.sql).
+  let esAdmin = false
+  if (user) {
+    const { data } = await supabase.from('admins').select('id').eq('id', user.id).maybeSingle()
+    esAdmin = !!data
+  }
+
+  return { response, user, esAdmin }
 }

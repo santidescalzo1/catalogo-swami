@@ -16,10 +16,22 @@ export default function AdminLogin() {
     setError('')
     setIsLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (error) {
+    if (error || !data.user) {
       setError('Credenciales incorrectas.')
+      setIsLoading(false)
+      return
+    }
+
+    // Login exitoso no es lo mismo que ser admin: esta misma cuenta puede
+    // ser un cliente logueado desde el catálogo público. proxy.ts ya
+    // bloquea el acceso igual, pero chequear acá evita el rebote confuso
+    // de empujar a /admin y volver para atrás.
+    const { data: esAdmin } = await supabase.from('admins').select('id').eq('id', data.user.id).maybeSingle()
+    if (!esAdmin) {
+      setError('Esta cuenta no tiene acceso al panel de administración.')
+      await supabase.auth.signOut()
       setIsLoading(false)
       return
     }
