@@ -17,6 +17,7 @@ interface Articulo {
   id_marca: number;
   id_rubro: number;
   precio_1: number;
+  oferta: boolean;
 }
 
 interface Categoria {
@@ -75,7 +76,7 @@ export default function EditarArticulos() {
     const limpio = termino.trim()
     let query = supabase
       .from('articulos')
-      .select('id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_marca, id_rubro, precio_1', { count: 'exact' })
+      .select('id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_marca, id_rubro, precio_1, oferta', { count: 'exact' })
 
     if (limpio.length >= 2) {
       limpio.split(/\s+/).forEach(palabra => {
@@ -115,7 +116,7 @@ export default function EditarArticulos() {
   const abrirEdicion = (item: Articulo) => {
     // un puñado de articulos historicos tienen id_marca/id_rubro en null
     // en vez del 0 ("Sin Marca"/"Sin Rubro") que usa el resto de la app.
-    setArticuloEditando({ ...item, id_marca: item.id_marca ?? 0, id_rubro: item.id_rubro ?? 0 })
+    setArticuloEditando({ ...item, id_marca: item.id_marca ?? 0, id_rubro: item.id_rubro ?? 0, oferta: item.oferta ?? false })
     const rubroActual = rubros.find(r => r.id === item.id_rubro)
     setCategoriaEdicion(rubroActual ? String(rubroActual.id_categoria_general ?? '') : '')
     setArchivoImagen(null)
@@ -177,6 +178,7 @@ export default function EditarArticulos() {
           id_marca: articuloEditando.id_marca,
           id_rubro: articuloEditando.id_rubro,
           precio_1: articuloEditando.precio_1,
+          oferta: articuloEditando.oferta,
         })
         .eq('id', articuloEditando.id)
 
@@ -251,6 +253,9 @@ export default function EditarArticulos() {
                       {item.descripcion}
                       {item.descripcion_estandarizada && (
                         <span className="ml-2 text-[9px] uppercase tracking-widest text-orange-500/70">· estandarizada</span>
+                      )}
+                      {item.oferta && (
+                        <span className="ml-2 text-[9px] uppercase tracking-widest text-orange-400">· oferta</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right text-white font-light whitespace-nowrap">${item.precio_1.toLocaleString('es-AR')}</td>
@@ -425,15 +430,26 @@ export default function EditarArticulos() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Precio</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={articuloEditando.precio_1}
-                  onChange={(e) => setArticuloEditando({ ...articuloEditando, precio_1: Number(e.target.value) })}
-                  className="w-full bg-black border border-zinc-800 rounded-sm px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-orange-500/50"
-                />
+              <div className="flex items-end gap-6">
+                <div className="flex-1">
+                  <label className="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Precio</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={articuloEditando.precio_1}
+                    onChange={(e) => setArticuloEditando({ ...articuloEditando, precio_1: Number(e.target.value) })}
+                    className="w-full bg-black border border-zinc-800 rounded-sm px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-orange-500/50"
+                  />
+                </div>
+                <label className="flex items-center gap-2 pb-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={articuloEditando.oferta}
+                    onChange={(e) => setArticuloEditando({ ...articuloEditando, oferta: e.target.checked })}
+                    className="w-4 h-4 accent-orange-500 cursor-pointer"
+                  />
+                  <span className="text-[10px] uppercase tracking-widest text-zinc-400">En oferta</span>
+                </label>
               </div>
             </div>
 

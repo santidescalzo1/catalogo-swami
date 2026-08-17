@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 
 const SUPABASE_STORAGE_URL = 'https://rhdxfpkrxeuymihhkyxo.supabase.co/storage/v1/object/public/repuestos'
@@ -56,7 +57,10 @@ export default function CatalogoPublico() {
   const [rubroFiltro, setRubroFiltro] = useState<string>('')
   const [vehiculoFiltro, setVehiculoFiltro] = useState<string>('')
   const [modeloAutoFiltro, setModeloAutoFiltro] = useState<string>('')
+  const [ofertaFiltro, setOfertaFiltro] = useState(false)
   const [cargando, setCargando] = useState(true)
+
+  const catalogoRef = useRef<HTMLElement>(null)
 
   const [paginaActual, setPaginaActual] = useState(1)
   const [totalRegistros, setTotalRegistros] = useState(0)
@@ -95,7 +99,7 @@ export default function CatalogoPublico() {
     localStorage.setItem('swami_carrito', JSON.stringify(carrito))
   }, [carrito])
 
-  const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idCategoria: string, idRubro: string, idVehiculo: string, idModeloAuto: string, pagina: number) => {
+  const aplicarFiltros = useCallback(async (termino: string, idMarca: string, idCategoria: string, idRubro: string, idVehiculo: string, idModeloAuto: string, soloOferta: boolean, pagina: number) => {
     setCargando(true)
     setErrorCarga(false)
 
@@ -139,6 +143,8 @@ export default function CatalogoPublico() {
         })
       }
     }
+
+    if (soloOferta) query = query.eq('oferta', true)
 
     if (idMarca) query = query.eq('id_marca', idMarca)
 
@@ -194,7 +200,7 @@ export default function CatalogoPublico() {
       if (dataMarcasAuto) setMarcasAuto(dataMarcasAuto)
       if (dataModelosAuto) setModelosAuto(dataModelosAuto)
 
-      aplicarFiltros('', '', '', '', '', '', 1)
+      aplicarFiltros('', '', '', '', '', '', false, 1)
     }
 
     inicializarCatalogo()
@@ -207,7 +213,7 @@ export default function CatalogoPublico() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       if (val.length >= 2 || val.length === 0) {
-        aplicarFiltros(val, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, 1)
+        aplicarFiltros(val, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, 1)
       }
     }, 400)
   }
@@ -215,33 +221,49 @@ export default function CatalogoPublico() {
   const handleMarca = (val: string) => {
     setMarcaFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busqueda, val, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, 1)
+    aplicarFiltros(busqueda, val, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, 1)
   }
 
   const handleCategoria = (val: string) => {
     setCategoriaFiltro(val)
     setRubroFiltro('')
     setPaginaActual(1)
-    aplicarFiltros(busqueda, marcaFiltro, val, '', vehiculoFiltro, modeloAutoFiltro, 1)
+    aplicarFiltros(busqueda, marcaFiltro, val, '', vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, 1)
   }
 
   const handleRubro = (val: string) => {
     setRubroFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, val, vehiculoFiltro, modeloAutoFiltro, 1)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, val, vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, 1)
   }
 
   const handleVehiculo = (val: string) => {
     setVehiculoFiltro(val)
     setModeloAutoFiltro('')
     setPaginaActual(1)
-    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, val, '', 1)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, val, '', ofertaFiltro, 1)
   }
 
   const handleModeloAuto = (val: string) => {
     setModeloAutoFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, val, 1)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, val, ofertaFiltro, 1)
+  }
+
+  const irAInicio = () => {
+    limpiarFiltros()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const irACatalogo = () => {
+    catalogoRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const irAOfertas = () => {
+    setOfertaFiltro(true)
+    setPaginaActual(1)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, true, 1)
+    catalogoRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   const limpiarFiltros = () => {
@@ -252,15 +274,16 @@ export default function CatalogoPublico() {
     setRubroFiltro('')
     setVehiculoFiltro('')
     setModeloAutoFiltro('')
+    setOfertaFiltro(false)
     setPaginaActual(1)
-    aplicarFiltros('', '', '', '', '', '', 1)
+    aplicarFiltros('', '', '', '', '', '', false, 1)
   }
 
-  const hayFiltrosActivos = busqueda !== '' || marcaFiltro !== '' || categoriaFiltro !== '' || rubroFiltro !== '' || vehiculoFiltro !== '' || modeloAutoFiltro !== ''
+  const hayFiltrosActivos = busqueda !== '' || marcaFiltro !== '' || categoriaFiltro !== '' || rubroFiltro !== '' || vehiculoFiltro !== '' || modeloAutoFiltro !== '' || ofertaFiltro
 
   const cambiarPagina = (nuevaPagina: number) => {
     setPaginaActual(nuevaPagina)
-    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, nuevaPagina)
+    aplicarFiltros(busqueda, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, nuevaPagina)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -308,13 +331,20 @@ export default function CatalogoPublico() {
   const totalPaginas = Math.ceil(totalRegistros / porPagina)
 
   return (
-    <main className="min-h-screen bg-black text-zinc-300 font-sans selection:bg-orange-500/30 overflow-x-hidden">
-      
+    <main className="min-h-screen bg-zinc-950 text-zinc-300 font-sans selection:bg-orange-500/30 overflow-x-hidden">
+
+      {/* BARRA DE ANUNCIOS */}
+      <div className="bg-gradient-to-r from-zinc-950 via-orange-950/40 to-zinc-950 border-b border-zinc-900">
+        <p className="max-w-7xl mx-auto px-6 py-2 text-center text-[10px] sm:text-[11px] text-orange-200/80 tracking-wide">
+          Envíos a todo Córdoba <span className="text-zinc-700 mx-2">·</span> Cotización directa por WhatsApp
+        </p>
+      </div>
+
       {/* HEADER */}
-      <header className="border-b border-zinc-900 bg-black/90 backdrop-blur-xl sticky top-0 z-20">
+      <header className="border-b border-zinc-800/50 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
-            
+
             {/* Título y Logo */}
             <div className="flex items-center justify-between w-full md:w-auto gap-4">
               <div className="flex items-center gap-4">
@@ -328,8 +358,8 @@ export default function CatalogoPublico() {
                   </span>
                 </div>
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => setMostrarCarrito(true)}
                 className="md:hidden relative p-2 text-zinc-400 hover:text-orange-500 transition-colors"
               >
@@ -341,7 +371,23 @@ export default function CatalogoPublico() {
                 )}
               </button>
             </div>
-            
+
+            {/* Navegación */}
+            <nav className="hidden md:flex items-center gap-8">
+              <button onClick={irAInicio} className="text-[11px] uppercase tracking-[0.15em] text-zinc-400 hover:text-orange-400 transition-colors">
+                Inicio
+              </button>
+              <button onClick={irACatalogo} className="text-[11px] uppercase tracking-[0.15em] text-zinc-400 hover:text-orange-400 transition-colors">
+                Catálogo
+              </button>
+              <button
+                onClick={irAOfertas}
+                className={`text-[11px] uppercase tracking-[0.15em] transition-colors ${ofertaFiltro ? 'text-orange-400' : 'text-zinc-400 hover:text-orange-400'}`}
+              >
+                Ofertas
+              </button>
+            </nav>
+
             {/* Buscador y Carrito Desktop */}
             <div className="w-full md:w-[32rem] flex gap-4 items-center">
               <div className="relative w-full">
@@ -375,7 +421,7 @@ export default function CatalogoPublico() {
               <select
                 value={marcaFiltro}
                 onChange={(e) => handleMarca(e.target.value)}
-                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-zinc-950 border border-zinc-800/70 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {marcas.filter(m => m.id !== 0).map(m => (
@@ -389,7 +435,7 @@ export default function CatalogoPublico() {
               <select
                 value={categoriaFiltro}
                 onChange={(e) => handleCategoria(e.target.value)}
-                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-zinc-950 border border-zinc-800/70 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {categoriasGenerales.map(c => (
@@ -403,7 +449,7 @@ export default function CatalogoPublico() {
               <select
                 value={rubroFiltro}
                 onChange={(e) => handleRubro(e.target.value)}
-                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-zinc-950 border border-zinc-800/70 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {rubros
@@ -420,7 +466,7 @@ export default function CatalogoPublico() {
               <select
                 value={vehiculoFiltro}
                 onChange={(e) => handleVehiculo(e.target.value)}
-                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-zinc-950 border border-zinc-800/70 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {marcasAuto.map(m => (
@@ -435,7 +481,7 @@ export default function CatalogoPublico() {
                 value={modeloAutoFiltro}
                 onChange={(e) => handleModeloAuto(e.target.value)}
                 disabled={!vehiculoFiltro}
-                className="bg-black border border-zinc-800 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="bg-zinc-950 border border-zinc-800/70 text-zinc-400 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <option value="">Todos</option>
                 {modelosAuto
@@ -457,8 +503,30 @@ export default function CatalogoPublico() {
         </div>
       </header>
 
+      {/* FRANJA DE CONFIANZA */}
+      <div className="border-b border-zinc-800/50 bg-zinc-900/20">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-[10px] uppercase tracking-[0.15em] text-zinc-500">
+          <span className="flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 text-orange-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            Envíos a todo Córdoba
+          </span>
+          <span className="flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 text-orange-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+            Cotización directa por WhatsApp
+          </span>
+          <span className="flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 text-orange-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+            Stock real, actualizado
+          </span>
+          <span className="flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 text-orange-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            Atención directa, sin intermediarios
+          </span>
+        </div>
+      </div>
+
       {/* GRILLA DE PRODUCTOS */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      <section ref={catalogoRef} className="max-w-7xl mx-auto px-6 py-12 scroll-mt-24">
         <div className="flex justify-between items-center mb-8 text-[10px] text-zinc-500 uppercase tracking-[0.2em]">
           <span>Inventario Swami</span>
           <div className="flex items-center gap-6">
@@ -558,20 +626,20 @@ export default function CatalogoPublico() {
             ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {repuestos.map((item) => (
-                <article 
-                  key={item.id} 
+                <article
+                  key={item.id}
                   onClick={() => setArticuloSeleccionado(item)}
-                  className="group relative border border-zinc-900 bg-zinc-950/30 p-5 hover:bg-zinc-900/50 hover:border-orange-500/30 transition-all duration-500 flex flex-col justify-between cursor-pointer"
+                  className="group relative border border-zinc-800/50 bg-zinc-900/40 p-5 hover:bg-zinc-900/70 hover:border-orange-500/30 hover:shadow-[0_0_40px_-12px_rgba(249,115,22,0.25)] transition-all duration-300 flex flex-col justify-between cursor-pointer"
                 >
                   <div>
                     {/* Contenedor de Imagen con URL Dinámica Supabase */}
-                    <div className="relative aspect-square w-full bg-black border border-zinc-900 mb-5 flex items-center justify-center overflow-hidden group-hover:border-orange-500/20 transition-colors">
+                    <div className="relative aspect-square w-full bg-zinc-950 border border-zinc-800/50 mb-5 flex items-center justify-center overflow-hidden group-hover:border-orange-500/20 transition-colors">
                       <Image
                         src={`${SUPABASE_STORAGE_URL}/${item.codigo}.jpg`}
                         alt={descripcionMostrada(item)}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                        className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                           e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -597,13 +665,13 @@ export default function CatalogoPublico() {
                     </h2>
                   </div>
                   
-                  <div className="flex items-center justify-between border-t border-zinc-900 pt-4 mt-4">
+                  <div className="flex items-center justify-between border-t border-zinc-800/50 pt-4 mt-4">
                     <span className="text-lg font-light text-white tracking-wide group-hover:text-orange-400 transition-colors">
                       ${item.precio_1.toLocaleString('es-AR')}
                     </span>
-                    <button 
+                    <button
                       onClick={(e) => agregarAlCarrito(item, e)}
-                      className="text-[9px] uppercase tracking-[0.2em] font-medium text-zinc-300 bg-zinc-900 border border-zinc-800 hover:bg-orange-500 hover:text-black hover:border-orange-500 px-4 py-2 transition-all shrink-0"
+                      className="text-[9px] uppercase tracking-[0.2em] font-medium text-zinc-300 bg-zinc-900 border border-zinc-800 group-hover:border-orange-500/50 hover:bg-orange-500 hover:text-black hover:border-orange-500 px-4 py-2 transition-all shrink-0"
                     >
                       Sumar
                     </button>
@@ -730,7 +798,7 @@ export default function CatalogoPublico() {
         <>
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity" onClick={() => setMostrarCarrito(false)} />
           <div className="fixed top-0 right-0 h-full w-full max-w-md bg-zinc-950 border-l border-zinc-900 z-50 flex flex-col shadow-2xl">
-            <div className="p-8 border-b border-zinc-900 flex justify-between items-center bg-black/50">
+            <div className="p-8 border-b border-zinc-900 flex justify-between items-center bg-zinc-950/50">
               <h2 className="text-sm font-light tracking-[0.3em] text-white uppercase">Tu Cotización</h2>
               <button onClick={() => setMostrarCarrito(false)} className="text-zinc-600 hover:text-orange-500 transition-colors p-2">✕</button>
             </div>
@@ -740,7 +808,7 @@ export default function CatalogoPublico() {
                 <div className="text-center text-zinc-600 text-[10px] mt-10 uppercase tracking-[0.2em]">La lista está vacía</div>
               ) : (
                 carrito.map(item => (
-                  <div key={item.id} className="flex flex-col gap-4 p-5 bg-black border border-zinc-900 hover:border-orange-500/30 transition-colors">
+                  <div key={item.id} className="flex flex-col gap-4 p-5 bg-zinc-950 border border-zinc-800/50 hover:border-orange-500/30 transition-colors">
                     <div className="flex justify-between items-start">
                       <div className="pr-4">
                         <span className="text-[10px] text-orange-500/80 font-mono block mb-2">{item.codigo}</span>
@@ -764,7 +832,7 @@ export default function CatalogoPublico() {
               )}
             </div>
 
-            <div className="p-8 bg-black border-t border-zinc-900">
+            <div className="p-8 bg-zinc-950 border-t border-zinc-900">
               <div className="flex justify-between items-end mb-8">
                 <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Total Estimado</span>
                 <span className="text-2xl font-light text-orange-500 tracking-wide">${totalCarrito.toLocaleString('es-AR')}</span>
@@ -781,6 +849,22 @@ export default function CatalogoPublico() {
           </div>
         </>
       )}
+
+      {/* FOOTER */}
+      <footer className="border-t border-zinc-800/50 mt-8">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+          <span className="text-[10px] text-zinc-700 uppercase tracking-[0.2em]">
+            Swami Distribuidora Mayorista
+          </span>
+          <Link
+            href="/admin"
+            aria-label="Acceso administrador"
+            className="text-zinc-800 hover:text-zinc-500 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+          </Link>
+        </div>
+      </footer>
     </main>
   )
 }
