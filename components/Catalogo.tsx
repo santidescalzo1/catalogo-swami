@@ -545,8 +545,8 @@ export default function Catalogo({ modo }: { modo: Modo }) {
   const totalCarrito = carrito.reduce((acc, item) => acc + (item.precio_1 * item.cantidad), 0)
 
   const enviarWhatsApp = () => {
-    const numeroWhatsApp = "5493513646356"
-    let texto = "Hola *Swami Distribuidora*!%0AQuería solicitar una cotización por los siguientes repuestos:%0A%0A"
+    const numeroWhatsApp = "5493515416301"
+    let texto = "Hola *Swami Autopartes*!%0AQuería solicitar una cotización por los siguientes repuestos:%0A%0A"
 
     carrito.forEach(item => {
       texto += `🔹 *[${item.codigo}]* ${descripcionMostrada(item)} (x${item.cantidad})%0A`
