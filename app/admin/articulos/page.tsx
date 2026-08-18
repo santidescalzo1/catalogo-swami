@@ -481,7 +481,8 @@ export default function EditarArticulos() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-b border-zinc-900 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                  <th className="text-left font-normal px-4 py-3">Código</th>
+                  <th className="text-left font-normal px-4 py-3">Código Original</th>
+                  <th className="text-left font-normal px-4 py-3">Código Interno</th>
                   <th className="text-left font-normal px-4 py-3">Descripción</th>
                   <th className="text-right font-normal px-4 py-3">Precio</th>
                   <th className="text-right font-normal px-4 py-3"></th>
@@ -490,7 +491,8 @@ export default function EditarArticulos() {
               <tbody>
                 {resultados.map(item => (
                   <tr key={item.id} className="border-b border-zinc-900 last:border-b-0 hover:bg-zinc-900/50 transition-colors">
-                    <td className="px-4 py-3 text-orange-500/80 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
+                    <td className="px-4 py-3 text-orange-500/80 font-mono text-[11px] whitespace-nowrap">{item.codigo_proveedor || '—'}</td>
+                    <td className="px-4 py-3 text-zinc-500 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
                     <td className="px-4 py-3 text-zinc-300 font-light">
                       {item.descripcion}
                       {item.descripcion_estandarizada && (
