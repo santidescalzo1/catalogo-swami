@@ -6,23 +6,69 @@ import { useRouter } from 'next/navigation'
 import * as XLSX from 'xlsx'
 import { supabase } from '@/lib/supabase/client'
 
-interface FilaCategoria {
-  ID: number;
-  Descripción: string | number;
+// Formato del Excel que manda el sistema de facturación: una sola hoja,
+// una fila por artículo, columnas en minúscula. "rubro"/"marca"/"codprov"
+// son abreviaturas propias de ese sistema (no IDs) — se resuelven contra
+// marcas.codigo_excel / rubros.codigo_excel / proveedores.codigo_excel,
+// que se poblaron una vez a partir de los artículos ya cargados (ver
+// supabase/codigo-excel-*.sql). Si aparece una abreviatura nueva que
+// nunca se vio, el artículo se carga igual pero sin esa clasificación,
+// para completarla a mano en "Editar artículos individuales".
+interface FilaArticuloExcel {
+  codigo?: string | number;
+  descrip?: string;
+  descrip2?: string;
+  descrip3?: string;
+  codprov?: string;
+  artprov?: string | number;
+  costo?: number | string;
+  coef?: number | string;
+  rubro?: string;
+  marca?: string;
 }
 
-interface FilaArticulo {
-  ID: number;
-  Código?: string | number;
-  Descripción?: string | number;
-  'Código Proveedor'?: string | number;
-  'ID Proveedor'?: number;
-  'ID Rubro'?: number;
-  'ID Marca'?: number;
-  'Precio 1'?: number;
-  Existencia?: number;
-  Ubicación?: string | number;
-  Oferta?: boolean | string | number;
+// Diccionario de abreviaturas -> palabra completa, extraído de los pares
+// descripcion/descripcion_estandarizada que ya se cargaron a mano en el
+// panel admin (sin ambigüedad: cada abreviatura siempre se expandió igual).
+// Se aplica solo a artículos NUEVOS al insertarlos — no toca la
+// descripción de artículos que ya existen.
+const REGLAS_ESTANDARIZACION: [string, string][] = [
+  ['ELECTROV.', 'ELECTROVALVULA'],
+  ['PRECAL.', 'PRECALENTAMIENTO'],
+  ['DISTRIB.', 'DISTRIBUCION'],
+  ['CALEF.', 'CALEFACCION'],
+  ['S/DEP.', 'S/DEPOSITO'],
+  ['C/DEP.', 'C/DEPOSITO'],
+  ['P/BRAZ.', 'P/BRAZO'],
+  ['CHEV.', 'CHEVROLET'],
+  ['PEUG.', 'PEUGEOT'],
+  ['CITR.', 'CITROEN'],
+  ['ORIG.', 'ORIGINAL'],
+  ['ELECT.', 'ELECTRICO'],
+  ['IMP.', 'IMPORTADO'],
+  ['JGO.', 'JUEGO'],
+  ['REF.', 'REFRIGERANTE'],
+  ['COMB.', 'COMBUSTIBLE'],
+  ['LIQ.', 'LIQUIDO'],
+  ['DEP.', 'DEPOSITO'],
+  ['NAC.', 'NACIONAL'],
+  ['HIDR.', 'HIDRAULICA'],
+  ['REN.', 'RENAULT'],
+  ['DIR.', 'DIRECCION'],
+  ['AUX.', 'AUXILIAR'],
+  ['INF.', 'INFERIOR'],
+  ['ACEL.', 'ACELERADOR'],
+  ['MULT.', 'MULTIPLE'],
+  ['ADM.', 'ADMISION'],
+]
+REGLAS_ESTANDARIZACION.sort((a, b) => b[0].length - a[0].length)
+
+function estandarizarAutomatico(descripcion: string): string {
+  let resultado = descripcion
+  for (const [abreviatura, expansion] of REGLAS_ESTANDARIZACION) {
+    resultado = resultado.split(abreviatura).join(expansion)
+  }
+  return resultado
 }
 
 export default function Home() {
@@ -53,66 +99,119 @@ export default function Home() {
     try {
       const buffer = await file.arrayBuffer()
       const workbook = XLSX.read(buffer, { type: 'buffer' })
-      
-      const hojaArticulos = workbook.Sheets['Articulo']
-      const hojaMarcas = workbook.Sheets['Marca']
-      const hojaRubros = workbook.Sheets['Rubro']
+      const hoja = workbook.Sheets[workbook.SheetNames[0]]
 
-      if (!hojaArticulos || !hojaMarcas || !hojaRubros) {
-        alert("Error: Faltan hojas en el Excel.")
+      if (!hoja) {
+        alert('Error: el Excel no tiene ninguna hoja.')
         setIsProcessing(false)
         return
       }
 
-      const articulosExcel = XLSX.utils.sheet_to_json<FilaArticulo>(hojaArticulos)
-      const marcasExcel = XLSX.utils.sheet_to_json<FilaCategoria>(hojaMarcas)
-      const rubrosExcel = XLSX.utils.sheet_to_json<FilaCategoria>(hojaRubros)
+      const filas = XLSX.utils.sheet_to_json<FilaArticuloExcel>(hoja)
 
-      setStatus('Sincronizando Marcas y Rubros...')
-      
-      const marcas = marcasExcel.map(m => ({ id: m.ID, descripcion: String(m.Descripción) }))
-      const { error: errorMarcas } = await supabase.from('marcas').upsert(marcas)
-      if (errorMarcas) throw errorMarcas
-
-      const rubros = rubrosExcel.map(r => ({ id: r.ID, descripcion: String(r.Descripción) }))
-      const { error: errorRubros } = await supabase.from('rubros').upsert(rubros)
-      if (errorRubros) throw errorRubros
-
-      setStatus(`Preparando ${articulosExcel.length} artículos...`)
-
-      const articulos = articulosExcel.map(a => ({
-        id: a.ID,
-        codigo: String(a.Código || ''),
-        descripcion: String(a.Descripción || ''),
-        codigo_proveedor: String(a['Código Proveedor'] || ''),
-        id_proveedor: Number(a['ID Proveedor']) || 0,
-        id_rubro: Number(a['ID Rubro']) || 0,
-        id_marca: Number(a['ID Marca']) || 0,
-        precio_1: Number(a['Precio 1']) || 0,
-        existencia: Number(a.Existencia) || 0,
-        ubicacion: String(a.Ubicación || ''),
-        oferta: Boolean(a.Oferta)
-      }))
-
-      setStatus('Subiendo catálogo masivo a la nube...')
-
-      const chunkSize = 1000
-      for (let i = 0; i < articulos.length; i += chunkSize) {
-        const chunk = articulos.slice(i, i + chunkSize)
-        const { error: errorArticulos } = await supabase.from('articulos').upsert(chunk)
-        if (errorArticulos) throw errorArticulos
-        
-        setProgress(`Subidos ${Math.min(i + chunkSize, articulos.length)} de ${articulos.length}...`)
+      if (filas.length === 0 || !('codigo' in filas[0])) {
+        alert('Error: no se encontró la columna "codigo" en la primera hoja. ¿Es el formato de Excel correcto?')
+        setIsProcessing(false)
+        return
       }
 
-      setStatus('¡Catálogo sincronizado con éxito!')
-      setProgress('')
-      alert('¡Los 4.125 repuestos de Swami Autopartes ya están online!')
+      setStatus('Cargando tablas de referencia...')
 
-   } catch (error) {
+      const [{ data: dataMarcas }, { data: dataRubros }, { data: dataProveedores }, { data: dataExistentes }] = await Promise.all([
+        supabase.from('marcas').select('id, codigo_excel'),
+        supabase.from('rubros').select('id, codigo_excel'),
+        supabase.from('proveedores').select('id, codigo_excel'),
+        supabase.from('articulos').select('codigo'),
+      ])
+
+      const mapaMarcas = new Map((dataMarcas ?? []).filter(m => m.codigo_excel).map(m => [m.codigo_excel as string, m.id]))
+      const mapaRubros = new Map((dataRubros ?? []).filter(r => r.codigo_excel).map(r => [r.codigo_excel as string, r.id]))
+      const mapaProveedores = new Map((dataProveedores ?? []).filter(p => p.codigo_excel).map(p => [p.codigo_excel as string, p.id]))
+      const codigosExistentes = new Set((dataExistentes ?? []).map(a => a.codigo))
+
+      setStatus('Procesando artículos...')
+
+      const actualizaciones: { codigo: string; precio_1: number }[] = []
+      const nuevos: Record<string, unknown>[] = []
+      let sinRubro = 0
+      let sinMarca = 0
+
+      for (const fila of filas) {
+        const codigo = String(fila.codigo ?? '').trim()
+        if (!codigo) continue
+
+        const costo = Number(fila.costo) || 0
+        const coef = Number(fila.coef) || 1
+        const precio_1 = Math.round(costo * coef * 100) / 100
+
+        if (codigosExistentes.has(codigo)) {
+          // Artículo existente: acá SOLO se toca el precio. No se manda
+          // descripcion/marca/rubro/proveedor — un upsert de Postgres pisa
+          // cualquier columna que le pases, y esas pueden tener
+          // correcciones manuales hechas en el panel de edición.
+          actualizaciones.push({ codigo, precio_1 })
+        } else {
+          // Artículo nuevo: se inserta completo. "descrip"+"descrip2" son
+          // la misma descripción cortada en dos por un límite de largo del
+          // sistema viejo — se reconstruyen concatenadas.
+          const descripcion = [fila.descrip, fila.descrip2, fila.descrip3]
+            .map(t => (t ?? '').toString().trim())
+            .filter(Boolean)
+            .join(' ')
+
+          const marcaTexto = (fila.marca ?? '').toString().trim().toUpperCase()
+          const rubroTexto = (fila.rubro ?? '').toString().trim().toUpperCase()
+          const provTexto = (fila.codprov ?? '').toString().trim().toUpperCase()
+
+          const id_marca = mapaMarcas.get(marcaTexto) ?? 0
+          const id_rubro = mapaRubros.get(rubroTexto) ?? 0
+          const id_proveedor = mapaProveedores.get(provTexto) ?? 0
+          if (id_marca === 0) sinMarca++
+          if (id_rubro === 0) sinRubro++
+
+          const estandarizada = estandarizarAutomatico(descripcion)
+
+          nuevos.push({
+            codigo,
+            descripcion,
+            descripcion_estandarizada: estandarizada !== descripcion ? estandarizada : null,
+            codigo_proveedor: String(fila.artprov ?? '').trim() || null,
+            id_proveedor,
+            id_marca,
+            id_rubro,
+            precio_1,
+            oferta: false,
+          })
+        }
+      }
+
+      setStatus(`Actualizando precios de ${actualizaciones.length} artículos...`)
+      const chunkSize = 1000
+      for (let i = 0; i < actualizaciones.length; i += chunkSize) {
+        const chunk = actualizaciones.slice(i, i + chunkSize)
+        const { error: errorPrecios } = await supabase.from('articulos').upsert(chunk, { onConflict: 'codigo' })
+        if (errorPrecios) throw errorPrecios
+        setProgress(`Precios: ${Math.min(i + chunkSize, actualizaciones.length)} de ${actualizaciones.length}...`)
+      }
+
+      if (nuevos.length > 0) {
+        setStatus(`Agregando ${nuevos.length} artículos nuevos...`)
+        const { error: errorNuevos } = await supabase.from('articulos').insert(nuevos)
+        if (errorNuevos) throw errorNuevos
+      }
+
+      setStatus('¡Listo!')
+      setProgress('')
+
+      let resumen = `Precios actualizados: ${actualizaciones.length}.\nArtículos nuevos agregados: ${nuevos.length}.`
+      if (nuevos.length > 0 && (sinRubro > 0 || sinMarca > 0)) {
+        resumen += `\n\nDe los nuevos, ${sinRubro} quedaron sin Rubro y ${sinMarca} sin Marca reconocidos — revisalos en "Editar artículos individuales".`
+      }
+      alert(resumen)
+
+    } catch (error) {
       console.error("Error completo extraído:", error)
-      
-      // Desarmamos el error de forma segura y estricta para TypeScript
+
       let errorMsg = "Error desconocido";
       if (typeof error === 'object' && error !== null) {
         const err = error as { message?: string; details?: string };
@@ -120,7 +219,7 @@ export default function Home() {
       } else {
         errorMsg = String(error);
       }
-      
+
       setStatus('Ocurrió un error. Revisá el cartel en pantalla.')
       alert("Motivo del rechazo en base de datos:\n" + errorMsg)
     } finally {
@@ -164,18 +263,21 @@ export default function Home() {
         </Link>
 
         <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-lg shadow-2xl">
-          <label className="block text-sm font-medium text-zinc-400 mb-4">
-            Importar lista de precios definitiva
+          <label className="block text-sm font-medium text-zinc-400 mb-2">
+            Importar Excel del sistema de facturación
           </label>
-          
-          <input 
-            type="file" 
+          <p className="text-xs text-zinc-600 mb-4">
+            Actualiza los precios de todos los artículos existentes (sin tocar la descripción estandarizada) y agrega automáticamente los artículos nuevos que encuentre.
+          </p>
+
+          <input
+            type="file"
             accept=".xlsx, .xls"
             onChange={handleFileChange}
             className="block w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-medium file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700 file:cursor-pointer cursor-pointer mb-6"
           />
-          
-          <button 
+
+          <button
             onClick={handleUpload}
             disabled={!file || isProcessing}
             className="w-full flex justify-center bg-white text-black font-medium py-3 px-4 rounded-sm transition-colors hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed mb-4"
