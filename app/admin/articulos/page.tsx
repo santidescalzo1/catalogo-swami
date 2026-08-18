@@ -35,6 +35,12 @@ interface ModeloAuto extends Categoria {
   id_marca_auto: number;
 }
 
+// La descripción estandarizada es la que efectivamente se muestra en el
+// catálogo público cuando está cargada — mismo criterio que
+// components/Catalogo.tsx, para que el panel admin no confunda a los
+// empleados mostrando siempre la original.
+const descripcionMostrada = (a: Articulo) => a.descripcion_estandarizada || a.descripcion
+
 export default function EditarArticulos() {
   const router = useRouter()
 
@@ -494,12 +500,15 @@ export default function EditarArticulos() {
                     <td className="px-4 py-3 text-orange-500/80 font-mono text-[11px] whitespace-nowrap">{item.codigo_proveedor || '—'}</td>
                     <td className="px-4 py-3 text-zinc-500 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
                     <td className="px-4 py-3 text-zinc-300 font-light">
-                      {item.descripcion}
+                      {descripcionMostrada(item)}
                       {item.descripcion_estandarizada && (
                         <span className="ml-2 text-[9px] uppercase tracking-widest text-orange-500/70">· estandarizada</span>
                       )}
                       {item.oferta && (
                         <span className="ml-2 text-[9px] uppercase tracking-widest text-orange-400">· oferta</span>
+                      )}
+                      {item.descripcion_estandarizada && (
+                        <div className="text-[10px] text-zinc-600 mt-0.5 font-mono">original: {item.descripcion}</div>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right text-white font-light whitespace-nowrap">${item.precio_1.toLocaleString('es-AR')}</td>
