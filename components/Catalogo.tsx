@@ -678,7 +678,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
 
                   {/* Placa Radiacor: mismo tratamiento, opaca cuando estas en Swami */}
                   <Link href="/radiacor" className={`flex items-center gap-3 transition-opacity ${modo === 'radiacor' ? '' : 'opacity-60 hover:opacity-100'}`}>
-                    <span className="w-11 h-11 md:h-14 md:w-14 bg-black border-2 border-white flex items-center justify-center text-white font-black text-xl md:text-2xl shrink-0">R</span>
+                    <span className="w-11 h-11 md:h-14 md:w-14 bg-black flex items-center justify-center text-white font-black text-xl md:text-2xl shrink-0">R</span>
                     <div className="hidden md:flex flex-col justify-center">
                       <span className="text-lg font-light tracking-[0.2em] text-white uppercase leading-tight">
                         Radiacor
