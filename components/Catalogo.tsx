@@ -56,6 +56,20 @@ interface ModeloAuto extends Categoria {
   id_marca_auto: number;
 }
 
+// Variantes de plural/singular de una palabra para que "bujias" tambien
+// encuentre "BUJIA" (y viceversa). Al ser busqueda por substring (ilike),
+// buscar por el singular ya alcanza para encontrar el plural — el caso que
+// faltaba era el inverso: derivar el singular a partir de un termino en
+// plural. Cubre los casos regulares del castellano (-s / -es); plurales
+// irregulares (luz -> luces) quedan afuera.
+function variantesPalabra(palabra: string): string[] {
+  const variantes = new Set([palabra])
+  const minuscula = palabra.toLowerCase()
+  if (minuscula.endsWith('es') && minuscula.length > 4) variantes.add(palabra.slice(0, -2))
+  if (minuscula.endsWith('s') && minuscula.length > 3) variantes.add(palabra.slice(0, -1))
+  return Array.from(variantes)
+}
+
 // Aplica la busqueda de texto ya probada (multi-palabra + version
 // normalizada para descripcion) pero acotada a una lista de columnas —
 // asi el mismo motor de busqueda sirve tanto para la caja de Codigo como
@@ -68,17 +82,21 @@ function aplicarBusquedaTexto(query: any, termino: string, columnas: string[], i
   const palabras = limpio.split(/\s+/)
 
   if (palabras.length === 1) {
-    const alternativas = columnas.map(c => `${c}.ilike.%${limpio}%`)
+    const variantes = variantesPalabra(limpio)
+    const alternativas = variantes.flatMap(v => columnas.map(c => `${c}.ilike.%${v}%`))
     if (incluirNormalizada) {
-      const normalizado = limpio.toLowerCase().replace(/[^a-z0-9áéíóúñ]/gi, '')
-      if (normalizado.length >= 2) alternativas.push(`descripcion_normalizada.ilike.%${normalizado}%`)
+      variantes.forEach(v => {
+        const normalizado = v.toLowerCase().replace(/[^a-z0-9áéíóúñ]/gi, '')
+        if (normalizado.length >= 2) alternativas.push(`descripcion_normalizada.ilike.%${normalizado}%`)
+      })
     }
     return query.or(alternativas.join(','))
   }
 
   let q = query
   palabras.forEach(palabra => {
-    q = q.or(columnas.map(c => `${c}.ilike.%${palabra}%`).join(','))
+    const variantes = variantesPalabra(palabra)
+    q = q.or(variantes.flatMap(v => columnas.map(c => `${c}.ilike.%${v}%`)).join(','))
   })
   return q
 }
