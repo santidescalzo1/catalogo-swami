@@ -300,7 +300,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
     let query = supabase
       .from('articulos')
       .select(`id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_proveedor, precio_1, marcas(descripcion), rubros(descripcion, categorias_generales(descripcion))${seleccionVehiculo}`, { count: 'exact' })
-      .gt('precio_1', 0)
+      .gt('precio_1', 0.01)
 
     // Radiacor es el mismo catalogo, acotado siempre a radiadores.
     if (modo === 'radiacor') query = query.eq('id_rubro', RUBRO_RADIADORES)
@@ -372,7 +372,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
           .from('articulos')
           .select('id_marca, marcas(id, descripcion)')
           .eq('id_rubro', RUBRO_RADIADORES)
-          .gt('precio_1', 0)
+          .gt('precio_1', 0.01)
 
         type FilaMarca = { id_marca: number; marcas: { id: number; descripcion: string } | null }
         const marcasVistas = new Map<number, string>()
@@ -388,7 +388,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
           .from('articulos_modelos_auto')
           .select('articulos!inner(id_rubro, precio_1), modelos_auto!inner(marcas_auto!inner(id, descripcion))')
           .eq('articulos.id_rubro', RUBRO_RADIADORES)
-          .gt('articulos.precio_1', 0)
+          .gt('articulos.precio_1', 0.01)
 
         type FilaVehiculoInit = { modelos_auto: { marcas_auto: { id: number; descripcion: string } | null } | null }
         const marcasAutoVistas = new Map<number, string>()
@@ -599,7 +599,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
           "sombra" que precede al degrade del header. */}
       <div className="bg-orange-800">
         <p className="max-w-7xl mx-auto px-6 py-2 text-center text-[10px] sm:text-[11px] text-orange-100 tracking-wide">
-          Envíos a todo Córdoba <span className="text-orange-300/50 mx-2">·</span> Cotización directa por WhatsApp
+          Envíos a todo el país <span className="text-orange-300/50 mx-2">·</span> Cotización directa por WhatsApp
         </p>
       </div>
 
@@ -864,7 +864,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-[10px] uppercase tracking-[0.15em] font-medium text-orange-900">
           <span className="flex items-center gap-2">
             <svg className="w-3.5 h-3.5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-            Envíos a todo Córdoba
+            Envíos a todo el país
           </span>
           <span className="flex items-center gap-2">
             <svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
