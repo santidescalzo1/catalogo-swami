@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+import { aplicarBusquedaTexto } from '@/lib/busquedaTexto'
 
 const SUPABASE_STORAGE_URL = 'https://rhdxfpkrxeuymihhkyxo.supabase.co/storage/v1/object/public/repuestos'
 
@@ -16,6 +17,7 @@ interface Articulo {
   codigo_proveedor: string | null;
   id_marca: number;
   id_rubro: number;
+  id_proveedor: number;
   precio_1: number;
   oferta: boolean;
 }
@@ -29,10 +31,26 @@ interface Rubro extends Categoria {
   id_categoria_general: number | null;
 }
 
+interface ModeloAuto extends Categoria {
+  id_marca_auto: number;
+}
+
 export default function EditarArticulos() {
   const router = useRouter()
 
-  const [busqueda, setBusqueda] = useState('')
+  // Filtros de busqueda: mismo motor que el catalogo publico (Codigo /
+  // Descripcion separados, Marca Producto, Rubro -> Subrubro, Marca Auto ->
+  // Modelo) mas Proveedor, que solo existe aca — en el panel admin no hace
+  // falta ocultarlo como en el catalogo publico.
+  const [busquedaCodigo, setBusquedaCodigo] = useState('')
+  const [busquedaDescripcion, setBusquedaDescripcion] = useState('')
+  const [marcaFiltro, setMarcaFiltro] = useState('')
+  const [categoriaFiltro, setCategoriaFiltro] = useState('')
+  const [rubroFiltro, setRubroFiltro] = useState('')
+  const [vehiculoFiltro, setVehiculoFiltro] = useState('')
+  const [modeloAutoFiltro, setModeloAutoFiltro] = useState('')
+  const [proveedorFiltro, setProveedorFiltro] = useState('')
+
   const [resultados, setResultados] = useState<Articulo[]>([])
   const [cargando, setCargando] = useState(false)
   const [paginaActual, setPaginaActual] = useState(1)
@@ -42,7 +60,11 @@ export default function EditarArticulos() {
 
   const [marcas, setMarcas] = useState<Categoria[]>([])
   const [rubros, setRubros] = useState<Rubro[]>([])
+  const rubrosRef = useRef<Rubro[]>([])
   const [categoriasGenerales, setCategoriasGenerales] = useState<Categoria[]>([])
+  const [marcasAuto, setMarcasAuto] = useState<Categoria[]>([])
+  const [modelosAuto, setModelosAuto] = useState<ModeloAuto[]>([])
+  const [proveedores, setProveedores] = useState<Categoria[]>([])
 
   const [articuloEditando, setArticuloEditando] = useState<Articulo | null>(null)
   const [categoriaEdicion, setCategoriaEdicion] = useState('')
@@ -50,18 +72,31 @@ export default function EditarArticulos() {
   const [previewImagen, setPreviewImagen] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null)
+  // La descripcion original (la del Excel de facturacion) arranca bloqueada
+  // en cada edicion: hace falta un click + confirmar para poder tocarla,
+  // asi nadie la edita "sin querer" en vez de la Estandarizada.
+  const [editandoOriginal, setEditandoOriginal] = useState(false)
 
   useEffect(() => {
-    const cargarCategorias = async () => {
+    const cargarFiltros = async () => {
       const { data: dataMarcas } = await supabase.from('marcas').select('*').order('descripcion')
       const { data: dataRubros } = await supabase.from('rubros').select('*').order('descripcion')
       const { data: dataCategorias } = await supabase.from('categorias_generales').select('*').order('descripcion')
+      const { data: dataMarcasAuto } = await supabase.from('marcas_auto_con_datos').select('*').order('descripcion')
+      const { data: dataModelosAuto } = await supabase.from('modelos_auto_con_datos').select('*').order('descripcion')
+      const { data: dataProveedores } = await supabase.from('proveedores').select('id, descripcion').neq('id', 0).order('descripcion')
 
       if (dataMarcas) setMarcas(dataMarcas)
-      if (dataRubros) setRubros(dataRubros)
+      if (dataRubros) {
+        setRubros(dataRubros)
+        rubrosRef.current = dataRubros
+      }
       if (dataCategorias) setCategoriasGenerales(dataCategorias)
+      if (dataMarcasAuto) setMarcasAuto(dataMarcasAuto)
+      if (dataModelosAuto) setModelosAuto(dataModelosAuto)
+      if (dataProveedores) setProveedores(dataProveedores)
     }
-    cargarCategorias()
+    cargarFiltros()
   }, [])
 
   const handleLogout = async () => {
@@ -70,25 +105,58 @@ export default function EditarArticulos() {
     router.refresh()
   }
 
-  const buscar = useCallback(async (termino: string, pagina: number) => {
+  const buscar = useCallback(async (
+    terminoCodigo: string,
+    terminoDescripcion: string,
+    idMarca: string,
+    idCategoria: string,
+    idRubro: string,
+    idVehiculo: string,
+    idModeloAuto: string,
+    idProveedor: string,
+    pagina: number
+  ) => {
     setCargando(true)
 
-    const limpio = termino.trim()
+    // El join a articulos_modelos_auto solo hace falta (y solo se pide con
+    // !inner, para no traer artículos sin ningún vehículo asociado) cuando
+    // hay un filtro de marca/modelo de auto activo.
+    const necesitaVehiculo = !!(idVehiculo || idModeloAuto)
+    const seleccionVehiculo = necesitaVehiculo
+      ? ', articulos_modelos_auto!inner(modelos_auto!inner(id_marca_auto))'
+      : ''
+
     let query = supabase
       .from('articulos')
-      .select('id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_marca, id_rubro, precio_1, oferta', { count: 'exact' })
+      .select(`id, codigo, descripcion, descripcion_estandarizada, codigo_proveedor, id_marca, id_rubro, id_proveedor, precio_1, oferta${seleccionVehiculo}`, { count: 'exact' })
 
-    if (limpio.length >= 2) {
-      limpio.split(/\s+/).forEach(palabra => {
-        query = query.or(`descripcion.ilike.%${palabra}%,descripcion_estandarizada.ilike.%${palabra}%,codigo.ilike.%${palabra}%,codigo_proveedor.ilike.%${palabra}%`)
-      })
+    query = aplicarBusquedaTexto(query, terminoCodigo, ['codigo', 'codigo_proveedor'], false)
+    query = aplicarBusquedaTexto(query, terminoDescripcion, ['descripcion', 'descripcion_estandarizada'], true)
+
+    if (idMarca) query = query.eq('id_marca', idMarca)
+
+    if (idRubro) {
+      query = query.eq('id_rubro', idRubro)
+    } else if (idCategoria) {
+      const idsEnCategoria = rubrosRef.current
+        .filter(r => String(r.id_categoria_general) === idCategoria)
+        .map(r => r.id)
+      query = query.in('id_rubro', idsEnCategoria.length > 0 ? idsEnCategoria : [-1])
     }
+
+    if (idModeloAuto) {
+      query = query.eq('articulos_modelos_auto.id_modelo_auto', idModeloAuto)
+    } else if (idVehiculo) {
+      query = query.eq('articulos_modelos_auto.modelos_auto.id_marca_auto', idVehiculo)
+    }
+
+    if (idProveedor) query = query.eq('id_proveedor', idProveedor)
 
     const desde = (pagina - 1) * porPagina
     const hasta = desde + porPagina - 1
 
     const { data, count } = await query.order('codigo').range(desde, hasta)
-    setResultados(data ?? [])
+    setResultados((data ?? []) as unknown as Articulo[])
     setTotalRegistros(count ?? 0)
     setCargando(false)
   }, [])
@@ -98,19 +166,88 @@ export default function EditarArticulos() {
     // (no puede resolverse durante el render), y no hay ningún await previo
     // que lo corra fuera del cuerpo síncrono del efecto.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    buscar('', 1)
+    buscar('', '', '', '', '', '', '', '', 1)
   }, [buscar])
 
-  const handleBusqueda = (val: string) => {
-    setBusqueda(val)
+  const handleBusquedaCodigo = (val: string) => {
+    setBusquedaCodigo(val)
     setPaginaActual(1)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => buscar(val, 1), 400)
+    debounceRef.current = setTimeout(() => {
+      if (val.length >= 2 || val.length === 0) {
+        buscar(val, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, proveedorFiltro, 1)
+      }
+    }, 400)
   }
+
+  const handleBusquedaDescripcion = (val: string) => {
+    setBusquedaDescripcion(val)
+    setPaginaActual(1)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      if (val.length >= 2 || val.length === 0) {
+        buscar(busquedaCodigo, val, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, proveedorFiltro, 1)
+      }
+    }, 400)
+  }
+
+  const handleMarca = (val: string) => {
+    setMarcaFiltro(val)
+    setPaginaActual(1)
+    buscar(busquedaCodigo, busquedaDescripcion, val, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, proveedorFiltro, 1)
+  }
+
+  const handleCategoria = (val: string) => {
+    setCategoriaFiltro(val)
+    setRubroFiltro('')
+    setPaginaActual(1)
+    buscar(busquedaCodigo, busquedaDescripcion, marcaFiltro, val, '', vehiculoFiltro, modeloAutoFiltro, proveedorFiltro, 1)
+  }
+
+  const handleRubro = (val: string) => {
+    setRubroFiltro(val)
+    setPaginaActual(1)
+    buscar(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, val, vehiculoFiltro, modeloAutoFiltro, proveedorFiltro, 1)
+  }
+
+  const handleVehiculo = (val: string) => {
+    setVehiculoFiltro(val)
+    setModeloAutoFiltro('')
+    setPaginaActual(1)
+    buscar(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, val, '', proveedorFiltro, 1)
+  }
+
+  const handleModeloAuto = (val: string) => {
+    setModeloAutoFiltro(val)
+    setPaginaActual(1)
+    buscar(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, val, proveedorFiltro, 1)
+  }
+
+  const handleProveedor = (val: string) => {
+    setProveedorFiltro(val)
+    setPaginaActual(1)
+    buscar(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, val, 1)
+  }
+
+  const limpiarFiltros = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    setBusquedaCodigo('')
+    setBusquedaDescripcion('')
+    setMarcaFiltro('')
+    setCategoriaFiltro('')
+    setRubroFiltro('')
+    setVehiculoFiltro('')
+    setModeloAutoFiltro('')
+    setProveedorFiltro('')
+    setPaginaActual(1)
+    buscar('', '', '', '', '', '', '', '', 1)
+  }
+
+  const hayFiltrosActivos = busquedaCodigo !== '' || busquedaDescripcion !== '' || marcaFiltro !== '' || categoriaFiltro !== '' || rubroFiltro !== '' || vehiculoFiltro !== '' || modeloAutoFiltro !== '' || proveedorFiltro !== ''
 
   const cambiarPagina = (nuevaPagina: number) => {
     setPaginaActual(nuevaPagina)
-    buscar(busqueda, nuevaPagina)
+    buscar(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, proveedorFiltro, nuevaPagina)
   }
 
   const abrirEdicion = (item: Articulo) => {
@@ -122,6 +259,7 @@ export default function EditarArticulos() {
     setArchivoImagen(null)
     setPreviewImagen(null)
     setMensaje(null)
+    setEditandoOriginal(false)
   }
 
   const cerrarEdicion = () => {
@@ -129,6 +267,16 @@ export default function EditarArticulos() {
     setArchivoImagen(null)
     setPreviewImagen(null)
     setMensaje(null)
+    setEditandoOriginal(false)
+  }
+
+  const pedirEdicionOriginal = () => {
+    const confirmado = window.confirm(
+      'Esta es la descripción que trae el Excel del sistema de facturación, no la que ve el cliente en el catálogo.\n\n' +
+      'Normalmente alcanza con editar la Descripción Estandarizada de arriba. Si volvés a importar precios, esta descripción se pisa igual.\n\n' +
+      '¿Seguro que querés editarla de todas formas?'
+    )
+    if (confirmado) setEditandoOriginal(true)
   }
 
   const handleArchivoImagen = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -195,11 +343,19 @@ export default function EditarArticulos() {
     }
   }
 
-  const subrubrosDisponibles = rubros
+  const subrubrosEdicion = rubros
     .filter(r => r.id !== 0)
     .filter(r => !categoriaEdicion || String(r.id_categoria_general) === categoriaEdicion)
 
+  const subrubrosFiltro = rubros
+    .filter(r => r.id !== 0)
+    .filter(r => !categoriaFiltro || String(r.id_categoria_general) === categoriaFiltro)
+
+  const modelosAutoFiltrados = modelosAuto.filter(m => !vehiculoFiltro || String(m.id_marca_auto) === vehiculoFiltro)
+
   const totalPaginas = Math.ceil(totalRegistros / porPagina)
+
+  const estiloSelect = "w-full bg-zinc-900/30 border border-zinc-800 rounded-sm px-3 py-2.5 text-[11px] text-zinc-300 focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
 
   return (
     <main className="min-h-screen bg-black text-zinc-300 font-sans p-6">
@@ -225,13 +381,96 @@ export default function EditarArticulos() {
           </div>
         </div>
 
-        <input
-          type="text"
-          placeholder="Buscar por código, proveedor o descripción... (vacío = todos los artículos)"
-          value={busqueda}
-          onChange={(e) => handleBusqueda(e.target.value)}
-          className="w-full bg-zinc-900/30 border border-zinc-800 rounded-sm px-5 py-3 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all mb-6"
-        />
+        <div className="space-y-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="text"
+              placeholder="Código (propio o de proveedor)..."
+              value={busquedaCodigo}
+              onChange={(e) => handleBusquedaCodigo(e.target.value)}
+              className="w-full bg-zinc-900/30 border border-zinc-800 rounded-sm px-5 py-3 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+            />
+            <input
+              type="text"
+              placeholder="Descripción..."
+              value={busquedaDescripcion}
+              onChange={(e) => handleBusquedaDescripcion(e.target.value)}
+              className="w-full bg-zinc-900/30 border border-zinc-800 rounded-sm px-5 py-3 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div>
+              <label className="block text-[9px] uppercase tracking-[0.2em] text-zinc-600 mb-1.5">Marca Producto</label>
+              <select value={marcaFiltro} onChange={(e) => handleMarca(e.target.value)} className={estiloSelect}>
+                <option value="">Todas</option>
+                {marcas.filter(m => m.id !== 0).map(m => (
+                  <option key={m.id} value={m.id}>{m.descripcion}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[9px] uppercase tracking-[0.2em] text-zinc-600 mb-1.5">Rubro</label>
+              <select value={categoriaFiltro} onChange={(e) => handleCategoria(e.target.value)} className={estiloSelect}>
+                <option value="">Todos</option>
+                {categoriasGenerales.map(c => (
+                  <option key={c.id} value={c.id}>{c.descripcion}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[9px] uppercase tracking-[0.2em] text-zinc-600 mb-1.5">Subrubro</label>
+              <select value={rubroFiltro} onChange={(e) => handleRubro(e.target.value)} disabled={!categoriaFiltro} className={estiloSelect}>
+                <option value="">Todos</option>
+                {subrubrosFiltro.map(r => (
+                  <option key={r.id} value={r.id}>{r.descripcion}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[9px] uppercase tracking-[0.2em] text-zinc-600 mb-1.5">Marca Auto</label>
+              <select value={vehiculoFiltro} onChange={(e) => handleVehiculo(e.target.value)} className={estiloSelect}>
+                <option value="">Todas</option>
+                {marcasAuto.map(m => (
+                  <option key={m.id} value={m.id}>{m.descripcion}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[9px] uppercase tracking-[0.2em] text-zinc-600 mb-1.5">Modelo</label>
+              <select value={modeloAutoFiltro} onChange={(e) => handleModeloAuto(e.target.value)} disabled={!vehiculoFiltro} className={estiloSelect}>
+                <option value="">Todos</option>
+                {modelosAutoFiltrados.map(m => (
+                  <option key={m.id} value={m.id}>{m.descripcion}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[9px] uppercase tracking-[0.2em] text-zinc-600 mb-1.5">Proveedor</label>
+              <select value={proveedorFiltro} onChange={(e) => handleProveedor(e.target.value)} className={estiloSelect}>
+                <option value="">Todos</option>
+                {proveedores.map(p => (
+                  <option key={p.id} value={p.id}>{p.descripcion}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={limpiarFiltros}
+              disabled={!hayFiltrosActivos}
+              className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-orange-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
 
         {cargando ? (
           <div className="text-center py-16 text-xs text-orange-500/70 uppercase tracking-[0.2em] animate-pulse">Cargando...</div>
@@ -354,24 +593,44 @@ export default function EditarArticulos() {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Descripción (original, del sistema de facturación)</label>
-                <textarea
-                  value={articuloEditando.descripcion}
-                  onChange={(e) => setArticuloEditando({ ...articuloEditando, descripcion: e.target.value })}
-                  rows={2}
-                  className="w-full bg-black border border-zinc-800 rounded-sm px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-orange-500/50 resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Descripción estandarizada (opcional)</label>
+              {/* La Estandarizada es la que efectivamente ve el cliente en el
+                  catalogo publico: se destaca con borde y fondo naranja
+                  suave para que sea la primera que se edite. */}
+              <div className="border-l-2 border-orange-500 bg-orange-500/[0.06] pl-4 pr-3 py-3 -mx-px">
+                <label className="flex flex-wrap items-baseline gap-x-2 text-[10px] uppercase tracking-widest text-orange-400 mb-2">
+                  Descripción estandarizada
+                  <span className="normal-case tracking-normal text-orange-300/60 text-[11px]">— esta es la que ve el cliente</span>
+                </label>
                 <textarea
                   value={articuloEditando.descripcion_estandarizada ?? ''}
                   onChange={(e) => setArticuloEditando({ ...articuloEditando, descripcion_estandarizada: e.target.value })}
                   rows={2}
                   placeholder="Si se completa, esta es la que se muestra en el catálogo público. No se pisa al re-importar el Excel."
-                  className="w-full bg-black border border-zinc-800 rounded-sm px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-orange-500/50 resize-none placeholder:text-zinc-600"
+                  className="w-full bg-black border border-orange-500/30 rounded-sm px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-orange-500 resize-none placeholder:text-zinc-600"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <label className="text-[10px] uppercase tracking-widest text-zinc-600">
+                    🔒 Descripción original (sistema de facturación)
+                  </label>
+                  {!editandoOriginal && (
+                    <button
+                      type="button"
+                      onClick={pedirEdicionOriginal}
+                      className="text-[9px] uppercase tracking-widest text-zinc-500 hover:text-orange-500 transition-colors shrink-0"
+                    >
+                      Editar de todas formas
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  value={articuloEditando.descripcion}
+                  onChange={(e) => setArticuloEditando({ ...articuloEditando, descripcion: e.target.value })}
+                  rows={2}
+                  disabled={!editandoOriginal}
+                  className="w-full bg-black border border-zinc-800 rounded-sm px-3 py-2 text-sm text-zinc-500 focus:outline-none focus:border-orange-500/50 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -426,7 +685,7 @@ export default function EditarArticulos() {
                     className="w-full bg-black border border-zinc-800 rounded-sm px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-orange-500/50 uppercase disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <option value={0}>Sin subrubro</option>
-                    {subrubrosDisponibles.map(r => (
+                    {subrubrosEdicion.map(r => (
                       <option key={r.id} value={r.id}>{r.descripcion}</option>
                     ))}
                   </select>
