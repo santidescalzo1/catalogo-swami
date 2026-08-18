@@ -117,17 +117,34 @@ export default function Home() {
 
       setStatus('Cargando tablas de referencia...')
 
-      const [{ data: dataMarcas }, { data: dataRubros }, { data: dataProveedores }, { data: dataExistentes }] = await Promise.all([
+      const [{ data: dataMarcas }, { data: dataRubros }, { data: dataProveedores }] = await Promise.all([
         supabase.from('marcas').select('id, codigo_excel'),
         supabase.from('rubros').select('id, codigo_excel'),
         supabase.from('proveedores').select('id, codigo_excel'),
-        supabase.from('articulos').select('codigo'),
       ])
 
       const mapaMarcas = new Map((dataMarcas ?? []).filter(m => m.codigo_excel).map(m => [m.codigo_excel as string, m.id]))
       const mapaRubros = new Map((dataRubros ?? []).filter(r => r.codigo_excel).map(r => [r.codigo_excel as string, r.id]))
       const mapaProveedores = new Map((dataProveedores ?? []).filter(p => p.codigo_excel).map(p => [p.codigo_excel as string, p.id]))
-      const codigosExistentes = new Set((dataExistentes ?? []).map(a => a.codigo))
+
+      // Traído en páginas: Supabase limita cada respuesta a 1000 filas por
+      // default, y con ~4125 artículos un solo select() se recortaba en
+      // silencio — eso hizo que miles de artículos existentes se
+      // confundieran con "nuevos" y el insert chocara contra el código
+      // único duplicado.
+      const codigosExistentes = new Set<string>()
+      {
+        const pageSize = 1000
+        let desde = 0
+        for (;;) {
+          const { data, error } = await supabase.from('articulos').select('codigo').range(desde, desde + pageSize - 1)
+          if (error) throw error
+          if (!data || data.length === 0) break
+          data.forEach(a => codigosExistentes.add(a.codigo))
+          if (data.length < pageSize) break
+          desde += pageSize
+        }
+      }
 
       setStatus('Procesando artículos...')
 
