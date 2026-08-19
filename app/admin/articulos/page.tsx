@@ -378,6 +378,9 @@ export default function EditarArticulos() {
             <Link href="/admin/fotos" className="text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest transition-colors">
               Subir fotos
             </Link>
+            <Link href="/admin/banners" className="text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest transition-colors">
+              Banner de ofertas
+            </Link>
             <Link href="/" className="text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest transition-colors">
               Ver catálogo
             </Link>

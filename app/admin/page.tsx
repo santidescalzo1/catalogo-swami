@@ -279,6 +279,13 @@ export default function Home() {
           Subir fotos →
         </Link>
 
+        <Link
+          href="/admin/banners"
+          className="block text-center text-xs text-zinc-500 hover:text-orange-500 uppercase tracking-widest border border-zinc-800 hover:border-orange-500/50 py-3 transition-colors"
+        >
+          Banner de ofertas →
+        </Link>
+
         <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-lg shadow-2xl">
           <label className="block text-sm font-medium text-zinc-400 mb-2">
             Importar Excel del sistema de facturación

@@ -9,6 +9,7 @@ import MotorExplosivo from '@/components/MotorExplosivo'
 import { aplicarBusquedaTexto } from '@/lib/busquedaTexto'
 
 const SUPABASE_STORAGE_URL = 'https://rhdxfpkrxeuymihhkyxo.supabase.co/storage/v1/object/public/repuestos'
+const BANNERS_STORAGE_URL = 'https://rhdxfpkrxeuymihhkyxo.supabase.co/storage/v1/object/public/banners'
 
 // Subrubro "RADIADORES" (dentro de la categoria general REFRIGERACION).
 // El catalogo Radiacor es, ni mas ni menos, el catalogo general filtrado
@@ -55,6 +56,15 @@ interface Rubro extends Categoria {
 
 interface ModeloAuto extends Categoria {
   id_marca_auto: number;
+}
+
+interface Banner {
+  id: number;
+  titulo: string;
+  texto: string | null;
+  imagen_path: string;
+  link_url: string | null;
+  orden: number;
 }
 
 export default function Catalogo({ modo }: { modo: Modo }) {
@@ -124,6 +134,56 @@ export default function Catalogo({ modo }: { modo: Modo }) {
     localStorage.setItem('swami_marca_elegida', elegido)
     setMostrarSelector(false)
     if (elegido === 'radiacor') router.push('/radiacor')
+  }
+
+  // Banners de ofertas: aparecen como popup al entrar (una vez por sesion
+  // de navegador) y, al cerrarlos, quedan como carrusel fijo arriba del
+  // catalogo hasta que se cierra tambien. La "firma" (ids de los banners
+  // activos concatenados) hace que si el admin agrega/saca un banner, el
+  // popup vuelva a aparecer aunque ya se haya visto esta sesion.
+  const [banners, setBanners] = useState<Banner[]>([])
+  const [mostrarPopupBanners, setMostrarPopupBanners] = useState(false)
+  const [mostrarCarruselBanners, setMostrarCarruselBanners] = useState(false)
+  const [indiceBanner, setIndiceBanner] = useState(0)
+
+  useEffect(() => {
+    if (banners.length === 0 || mostrarSelector) return
+    const firma = banners.map(b => b.id).join(',')
+    const vistos = sessionStorage.getItem('swami_banners_vistos')
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (vistos !== firma) {
+      setMostrarPopupBanners(true)
+    } else if (sessionStorage.getItem('swami_carrusel_cerrado') !== firma) {
+      setMostrarCarruselBanners(true)
+    }
+  }, [banners, mostrarSelector])
+
+  useEffect(() => {
+    if (banners.length < 2 || (!mostrarPopupBanners && !mostrarCarruselBanners)) return
+    const intervalo = setInterval(() => {
+      setIndiceBanner(i => (i + 1) % banners.length)
+    }, 5000)
+    return () => clearInterval(intervalo)
+  }, [banners.length, mostrarPopupBanners, mostrarCarruselBanners])
+
+  const cerrarPopupBanners = () => {
+    sessionStorage.setItem('swami_banners_vistos', banners.map(b => b.id).join(','))
+    setMostrarPopupBanners(false)
+    setMostrarCarruselBanners(true)
+  }
+
+  const cerrarCarruselBanners = () => {
+    sessionStorage.setItem('swami_carrusel_cerrado', banners.map(b => b.id).join(','))
+    setMostrarCarruselBanners(false)
+  }
+
+  const irABanner = (banner: Banner) => {
+    if (!banner.link_url) return
+    if (banner.link_url.startsWith('http')) {
+      window.open(banner.link_url, '_blank')
+    } else {
+      router.push(banner.link_url)
+    }
   }
 
   useEffect(() => {
@@ -328,10 +388,12 @@ export default function Catalogo({ modo }: { modo: Modo }) {
       // no muestra modelos vacíos, y se actualiza solo si se cargan
       // artículos nuevos.
       const { data: dataModelosAuto } = await supabase.from('modelos_auto_con_datos').select('*').order('descripcion')
+      const { data: dataBanners } = await supabase.from('banners').select('id, titulo, texto, imagen_path, link_url, orden').eq('activo', true).order('orden')
 
       if (dataCategorias) setCategoriasGenerales(dataCategorias)
       if (dataProveedoresSinRef) setProveedoresSinRef(dataProveedoresSinRef.map(p => p.id))
       if (dataModelosAuto) setModelosAuto(dataModelosAuto)
+      if (dataBanners) setBanners(dataBanners)
 
       if (modo === 'radiacor') {
         // Filtros propios de Radiacor: solo marcas y marcas de auto que
@@ -565,6 +627,56 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 </div>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP DE BANNERS: aparece al entrar (una vez por sesion) si hay
+          banners activos cargados desde /admin/banners. Al cerrarlo pasa a
+          vivir como carrusel fijo, ver mas abajo. */}
+      {mostrarPopupBanners && banners.length > 0 && (
+        <div className="fixed inset-0 z-[55] flex items-center justify-center p-6 bg-zinc-950/90 backdrop-blur-sm">
+          <div className="relative max-w-lg w-full bg-white overflow-hidden">
+            <button
+              onClick={cerrarPopupBanners}
+              aria-label="Cerrar"
+              className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+            >
+              ✕
+            </button>
+            <button
+              onClick={() => irABanner(banners[indiceBanner])}
+              className={`block w-full text-left ${banners[indiceBanner].link_url ? 'cursor-pointer' : 'cursor-default'}`}
+            >
+              <div className="relative w-full aspect-[4/3] bg-zinc-100">
+                <Image
+                  src={`${BANNERS_STORAGE_URL}/${banners[indiceBanner].imagen_path}`}
+                  alt={banners[indiceBanner].titulo}
+                  fill
+                  priority
+                  sizes="512px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-5">
+                <h3 className="text-lg font-medium text-zinc-900 mb-1">{banners[indiceBanner].titulo}</h3>
+                {banners[indiceBanner].texto && (
+                  <p className="text-sm text-zinc-600">{banners[indiceBanner].texto}</p>
+                )}
+              </div>
+            </button>
+            {banners.length > 1 && (
+              <div className="flex items-center justify-center gap-2 pb-4">
+                {banners.map((b, i) => (
+                  <button
+                    key={b.id}
+                    onClick={() => setIndiceBanner(i)}
+                    aria-label={`Ver banner ${i + 1}`}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${i === indiceBanner ? 'bg-orange-500' : 'bg-zinc-300'}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -854,6 +966,55 @@ export default function Catalogo({ modo }: { modo: Modo }) {
           </span>
         </div>
       </div>
+
+      {/* CARRUSEL DE BANNERS: vive fijo arriba del catalogo despues de que
+          se cierra el popup de entrada, hasta que se cierra tambien. */}
+      {mostrarCarruselBanners && banners.length > 0 && (
+        <div className="border-b border-orange-300 bg-white">
+          <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
+            <button
+              onClick={() => irABanner(banners[indiceBanner])}
+              className={`flex-1 flex items-center gap-4 text-left min-w-0 ${banners[indiceBanner].link_url ? 'cursor-pointer' : 'cursor-default'}`}
+            >
+              <div className="relative w-14 h-14 shrink-0 bg-zinc-100">
+                <Image
+                  src={`${BANNERS_STORAGE_URL}/${banners[indiceBanner].imagen_path}`}
+                  alt={banners[indiceBanner].titulo}
+                  fill
+                  priority
+                  sizes="56px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-zinc-900 truncate">{banners[indiceBanner].titulo}</p>
+                {banners[indiceBanner].texto && (
+                  <p className="text-xs text-zinc-500 truncate">{banners[indiceBanner].texto}</p>
+                )}
+              </div>
+            </button>
+            {banners.length > 1 && (
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
+                {banners.map((b, i) => (
+                  <button
+                    key={b.id}
+                    onClick={() => setIndiceBanner(i)}
+                    aria-label={`Ver banner ${i + 1}`}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${i === indiceBanner ? 'bg-orange-500' : 'bg-zinc-300'}`}
+                  />
+                ))}
+              </div>
+            )}
+            <button
+              onClick={cerrarCarruselBanners}
+              aria-label="Cerrar"
+              className="shrink-0 text-zinc-400 hover:text-orange-600 transition-colors p-1"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* GRILLA DE PRODUCTOS */}
       <section ref={catalogoRef} className="max-w-7xl mx-auto px-6 py-12 scroll-mt-24">
