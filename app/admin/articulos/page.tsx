@@ -612,13 +612,23 @@ export default function EditarArticulos() {
                   Descripción estandarizada
                   <span className="normal-case tracking-normal text-orange-300/60 text-[11px]">— esta es la que ve el cliente</span>
                 </label>
+                {/* Si todavia no se estandarizo a mano, se precarga con la
+                    original como punto de partida editable (antes quedaba
+                    vacia con solo un placeholder, obligando a retipear todo
+                    el texto desde cero). Si no se toca, se sigue guardando
+                    null — no se "estandariza" solo por abrir y cerrar el
+                    modal. */}
                 <textarea
-                  value={articuloEditando.descripcion_estandarizada ?? ''}
+                  value={articuloEditando.descripcion_estandarizada ?? articuloEditando.descripcion}
                   onChange={(e) => setArticuloEditando({ ...articuloEditando, descripcion_estandarizada: e.target.value })}
                   rows={2}
-                  placeholder="Si se completa, esta es la que se muestra en el catálogo público. No se pisa al re-importar el Excel."
-                  className="w-full bg-black border border-orange-500/30 rounded-sm px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-orange-500 resize-none placeholder:text-zinc-600"
+                  className="w-full bg-black border border-orange-500/30 rounded-sm px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-orange-500 resize-none"
                 />
+                {!articuloEditando.descripcion_estandarizada && (
+                  <p className="mt-1.5 text-[10px] text-orange-300/50">
+                    Todavía sin estandarizar — este es el texto original como punto de partida. Editalo para guardarlo como estandarizada.
+                  </p>
+                )}
               </div>
 
               <div>
