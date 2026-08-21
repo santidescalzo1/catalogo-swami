@@ -145,13 +145,35 @@ export default function Catalogo({ modo }: { modo: Modo }) {
   const [mostrarPopupBanners, setMostrarPopupBanners] = useState(false)
   const [mostrarCarruselBanners, setMostrarCarruselBanners] = useState(false)
   const [indiceBanner, setIndiceBanner] = useState(0)
+  // Controlan la animacion de entrada (fade + zoom Ken Burns en el popup,
+  // slide-in en la tarjeta flotante): arrancan en false para que el primer
+  // render pinte el estado "antes" de la transicion, y un frame despues
+  // pasan a true disparando la transicion CSS hacia el estado final.
+  const [entradaPopup, setEntradaPopup] = useState(false)
+  const [entradaCarrusel, setEntradaCarrusel] = useState(false)
+
+  useEffect(() => {
+    if (!mostrarPopupBanners) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEntradaPopup(false)
+    const raf = requestAnimationFrame(() => setEntradaPopup(true))
+    return () => cancelAnimationFrame(raf)
+  }, [mostrarPopupBanners])
+
+  useEffect(() => {
+    if (!mostrarCarruselBanners) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEntradaCarrusel(false)
+    const raf = requestAnimationFrame(() => setEntradaCarrusel(true))
+    return () => cancelAnimationFrame(raf)
+  }, [mostrarCarruselBanners])
 
   useEffect(() => {
     if (banners.length === 0 || mostrarSelector) return
     const firma = banners.map(b => b.id).join(',')
     const vistos = sessionStorage.getItem('swami_banners_vistos')
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (vistos !== firma) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMostrarPopupBanners(true)
     } else if (sessionStorage.getItem('swami_carrusel_cerrado') !== firma) {
       setMostrarCarruselBanners(true)
@@ -610,7 +632,9 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 onClick={() => elegirMarca('swami')}
                 className="group border-2 border-white/20 hover:border-orange-500 bg-zinc-900 p-8 flex flex-col items-center gap-4 transition-colors"
               >
-                <span className="w-16 h-16 border-2 border-white flex items-center justify-center text-white font-black text-3xl group-hover:border-orange-500 group-hover:text-orange-500 transition-colors">S</span>
+                <span className="w-16 h-16 bg-black flex items-center justify-center overflow-hidden ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-orange-500 transition-all">
+                  <Image src="/logo.png" alt="Swami" width={64} height={64} priority className="w-full h-full object-contain p-1.5" />
+                </span>
                 <div className="text-center">
                   <span className="block text-white text-lg font-light tracking-[0.15em] uppercase">Swami Autopartes</span>
                   <span className="block text-zinc-400 text-xs mt-1">Catálogo completo de repuestos</span>
@@ -620,7 +644,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 onClick={() => elegirMarca('radiacor')}
                 className="group border-2 border-white/20 hover:border-orange-500 bg-zinc-900 p-8 flex flex-col items-center gap-4 transition-colors"
               >
-                <span className="w-16 h-16 border-2 border-white flex items-center justify-center text-white font-black text-3xl group-hover:border-orange-500 group-hover:text-orange-500 transition-colors">R</span>
+                <span className="w-16 h-16 bg-black flex items-center justify-center text-white font-black text-3xl ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-orange-500 transition-all">R</span>
                 <div className="text-center">
                   <span className="block text-white text-lg font-light tracking-[0.15em] uppercase">Radiacor</span>
                   <span className="block text-zinc-400 text-xs mt-1">Radiadores multimarca</span>
@@ -636,47 +660,57 @@ export default function Catalogo({ modo }: { modo: Modo }) {
           vivir como carrusel fijo, ver mas abajo. */}
       {mostrarPopupBanners && banners.length > 0 && (
         <div className="fixed inset-0 z-[55] flex items-center justify-center p-6 bg-zinc-950/90 backdrop-blur-sm">
-          <div className="relative max-w-lg w-full bg-white overflow-hidden">
+          <div className={`relative max-w-lg w-full aspect-[4/3] overflow-hidden shadow-2xl transition-all duration-500 ease-out ${entradaPopup ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+            <Image
+              src={`${BANNERS_STORAGE_URL}/${banners[indiceBanner].imagen_path}`}
+              alt={banners[indiceBanner].titulo}
+              fill
+              priority
+              sizes="512px"
+              className={`object-cover transition-transform duration-[7000ms] ease-out ${entradaPopup ? 'scale-100' : 'scale-110'}`}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+            <span className="absolute top-4 left-4 bg-orange-600 text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-sm">
+              Oferta
+            </span>
+
             <button
               onClick={cerrarPopupBanners}
               aria-label="Cerrar"
-              className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white border border-white/30 rounded-full transition-colors"
             >
               ✕
             </button>
-            <button
-              onClick={() => irABanner(banners[indiceBanner])}
-              className={`block w-full text-left ${banners[indiceBanner].link_url ? 'cursor-pointer' : 'cursor-default'}`}
-            >
-              <div className="relative w-full aspect-[4/3] bg-zinc-100">
-                <Image
-                  src={`${BANNERS_STORAGE_URL}/${banners[indiceBanner].imagen_path}`}
-                  alt={banners[indiceBanner].titulo}
-                  fill
-                  priority
-                  sizes="512px"
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-5">
-                <h3 className="text-lg font-medium text-zinc-900 mb-1">{banners[indiceBanner].titulo}</h3>
+
+            <div className="absolute left-5 right-5 bottom-5">
+              <button
+                onClick={() => irABanner(banners[indiceBanner])}
+                className={`block w-full text-left ${banners[indiceBanner].link_url ? 'cursor-pointer' : 'cursor-default'}`}
+              >
+                <h3 className="text-white text-xl font-semibold mb-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">{banners[indiceBanner].titulo}</h3>
                 {banners[indiceBanner].texto && (
-                  <p className="text-sm text-zinc-600">{banners[indiceBanner].texto}</p>
+                  <p className="text-white/85 text-sm mb-3">{banners[indiceBanner].texto}</p>
                 )}
-              </div>
-            </button>
-            {banners.length > 1 && (
-              <div className="flex items-center justify-center gap-2 pb-4">
-                {banners.map((b, i) => (
-                  <button
-                    key={b.id}
-                    onClick={() => setIndiceBanner(i)}
-                    aria-label={`Ver banner ${i + 1}`}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${i === indiceBanner ? 'bg-orange-500' : 'bg-zinc-300'}`}
-                  />
-                ))}
-              </div>
-            )}
+                {banners[indiceBanner].link_url && (
+                  <span className="inline-block bg-white text-zinc-900 text-[11px] font-bold uppercase tracking-widest px-4 py-2.5 rounded-sm">
+                    Ver más
+                  </span>
+                )}
+              </button>
+              {banners.length > 1 && (
+                <div className="flex items-center gap-1.5 mt-3">
+                  {banners.map((b, i) => (
+                    <button
+                      key={b.id}
+                      onClick={() => setIndiceBanner(i)}
+                      aria-label={`Ver banner ${i + 1}`}
+                      className={`w-1.5 h-1.5 rounded-full transition-colors ${i === indiceBanner ? 'bg-white' : 'bg-white/40'}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -967,52 +1001,51 @@ export default function Catalogo({ modo }: { modo: Modo }) {
         </div>
       </div>
 
-      {/* CARRUSEL DE BANNERS: vive fijo arriba del catalogo despues de que
-          se cierra el popup de entrada, hasta que se cierra tambien. */}
+      {/* TARJETA FLOTANTE DE BANNERS: vive anclada abajo a la derecha
+          despues de que se cierra el popup de entrada, hasta que se cierra
+          tambien. Al ser "fixed" no empuja el catalogo hacia abajo. */}
       {mostrarCarruselBanners && banners.length > 0 && (
-        <div className="border-b border-orange-300 bg-white">
-          <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
-            <button
-              onClick={() => irABanner(banners[indiceBanner])}
-              className={`flex-1 flex items-center gap-4 text-left min-w-0 ${banners[indiceBanner].link_url ? 'cursor-pointer' : 'cursor-default'}`}
-            >
-              <div className="relative w-14 h-14 shrink-0 bg-zinc-100">
-                <Image
-                  src={`${BANNERS_STORAGE_URL}/${banners[indiceBanner].imagen_path}`}
-                  alt={banners[indiceBanner].titulo}
-                  fill
-                  priority
-                  sizes="56px"
-                  className="object-cover"
-                />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-zinc-900 truncate">{banners[indiceBanner].titulo}</p>
-                {banners[indiceBanner].texto && (
-                  <p className="text-xs text-zinc-500 truncate">{banners[indiceBanner].texto}</p>
-                )}
-              </div>
-            </button>
-            {banners.length > 1 && (
-              <div className="hidden sm:flex items-center gap-2 shrink-0">
-                {banners.map((b, i) => (
-                  <button
-                    key={b.id}
-                    onClick={() => setIndiceBanner(i)}
-                    aria-label={`Ver banner ${i + 1}`}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${i === indiceBanner ? 'bg-orange-500' : 'bg-zinc-300'}`}
-                  />
-                ))}
-              </div>
-            )}
+        <div
+          className={`fixed bottom-5 right-5 z-40 w-64 bg-white rounded-md shadow-2xl overflow-hidden transition-all duration-500 ease-out ${entradaCarrusel ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+        >
+          <div className="relative aspect-video bg-zinc-100">
+            <Image
+              src={`${BANNERS_STORAGE_URL}/${banners[indiceBanner].imagen_path}`}
+              alt={banners[indiceBanner].titulo}
+              fill
+              priority
+              sizes="256px"
+              className="object-cover"
+            />
             <button
               onClick={cerrarCarruselBanners}
               aria-label="Cerrar"
-              className="shrink-0 text-zinc-400 hover:text-orange-600 transition-colors p-1"
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors text-xs"
             >
               ✕
             </button>
           </div>
+          <button
+            onClick={() => irABanner(banners[indiceBanner])}
+            className={`block w-full text-left px-3.5 pt-2.5 pb-1.5 ${banners[indiceBanner].link_url ? 'cursor-pointer' : 'cursor-default'}`}
+          >
+            <p className="text-[13px] font-semibold text-zinc-900 truncate">{banners[indiceBanner].titulo}</p>
+            {banners[indiceBanner].texto && (
+              <p className="text-[11px] text-zinc-500 truncate">{banners[indiceBanner].texto}</p>
+            )}
+          </button>
+          {banners.length > 1 && (
+            <div className="flex items-center gap-1.5 px-3.5 pb-3">
+              {banners.map((b, i) => (
+                <button
+                  key={b.id}
+                  onClick={() => setIndiceBanner(i)}
+                  aria-label={`Ver banner ${i + 1}`}
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${i === indiceBanner ? 'bg-orange-500' : 'bg-zinc-200'}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
