@@ -624,7 +624,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                   <Image src="/logo.png" alt="Swami" width={64} height={64} priority className="w-full h-full object-contain p-1.5" />
                 </span>
                 <div className="text-center">
-                  <span className="font-display block text-white text-lg font-semibold tracking-[0.15em] uppercase">Swami Autopartes</span>
+                  <span className="font-display block text-white text-lg font-semibold tracking-[0.04em] uppercase">Swami Autopartes</span>
                   <span className="block text-zinc-400 text-xs mt-1">Catálogo completo de repuestos</span>
                 </div>
               </button>
@@ -634,7 +634,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
               >
                 <span className="w-16 h-16 rounded-sm bg-zinc-950/60 flex items-center justify-center text-brand-300 font-display font-bold text-3xl ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-brand-500 transition-all">R</span>
                 <div className="text-center">
-                  <span className="font-display block text-white text-lg font-semibold tracking-[0.15em] uppercase">Radiacor</span>
+                  <span className="font-display block text-white text-lg font-semibold tracking-[0.04em] uppercase">Radiacor</span>
                   <span className="block text-zinc-400 text-xs mt-1">Radiadores multimarca</span>
                 </div>
               </button>
@@ -782,7 +782,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                       <Image src="/logo.png" alt="Swami Logo" width={500} height={500} priority className="w-full h-full object-contain p-1.5" />
                     </span>
                     <div className="hidden md:flex flex-col justify-center">
-                      <h1 className="font-display text-xl font-semibold tracking-[0.15em] text-white uppercase leading-tight">
+                      <h1 className="font-display text-xl font-semibold tracking-[0.04em] text-white uppercase leading-tight">
                         Swami Autopartes
                       </h1>
                       <span className="text-[10px] text-brand-200 tracking-[0.3em] uppercase opacity-90">
@@ -799,7 +799,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                   <Link href="/radiacor" className={`flex items-center gap-3 transition-opacity ${modo === 'radiacor' ? '' : 'opacity-60 hover:opacity-100'}`}>
                     <span className="w-11 h-11 md:h-14 md:w-14 rounded-sm bg-zinc-950/60 ring-1 ring-white/15 flex items-center justify-center text-brand-300 font-display font-bold text-xl md:text-2xl shrink-0">R</span>
                     <div className="hidden md:flex flex-col justify-center">
-                      <span className="font-display text-xl font-semibold tracking-[0.15em] text-white uppercase leading-tight">
+                      <span className="font-display text-xl font-semibold tracking-[0.04em] text-white uppercase leading-tight">
                         Radiacor
                       </span>
                       <span className="text-[10px] text-brand-200 tracking-[0.3em] uppercase opacity-90">
