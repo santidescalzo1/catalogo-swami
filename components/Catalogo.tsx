@@ -85,7 +85,6 @@ export default function Catalogo({ modo }: { modo: Modo }) {
   const [rubroFiltro, setRubroFiltro] = useState<string>('')
   const [vehiculoFiltro, setVehiculoFiltro] = useState<string>('')
   const [modeloAutoFiltro, setModeloAutoFiltro] = useState<string>('')
-  const [ofertaFiltro, setOfertaFiltro] = useState(false)
   const [cargando, setCargando] = useState(true)
 
   const catalogoRef = useRef<HTMLElement>(null)
@@ -339,7 +338,6 @@ export default function Catalogo({ modo }: { modo: Modo }) {
     idRubro: string,
     idVehiculo: string,
     idModeloAuto: string,
-    soloOferta: boolean,
     pagina: number
   ) => {
     setCargando(true)
@@ -363,8 +361,6 @@ export default function Catalogo({ modo }: { modo: Modo }) {
 
     query = aplicarBusquedaTexto(query, terminoCodigo, ['codigo', 'codigo_proveedor'], false)
     query = aplicarBusquedaTexto(query, terminoDescripcion, ['descripcion', 'descripcion_estandarizada'], true)
-
-    if (soloOferta) query = query.eq('oferta', true)
 
     if (idMarca) query = query.eq('id_marca', idMarca)
 
@@ -473,7 +469,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
         if (dataMarcasAuto) setMarcasAuto(dataMarcasAuto)
       }
 
-      aplicarFiltros('', '', '', '', '', '', '', false, 1)
+      aplicarFiltros('', '', '', '', '', '', '', 1)
     }
 
     inicializarCatalogo()
@@ -486,7 +482,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       if (val.length >= 2 || val.length === 0) {
-        aplicarFiltros(val, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, 1)
+        aplicarFiltros(val, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, 1)
       }
     }, 400)
   }
@@ -498,7 +494,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       if (val.length >= 2 || val.length === 0) {
-        aplicarFiltros(busquedaCodigo, val, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, 1)
+        aplicarFiltros(busquedaCodigo, val, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, 1)
       }
     }, 400)
   }
@@ -506,33 +502,33 @@ export default function Catalogo({ modo }: { modo: Modo }) {
   const handleMarca = (val: string) => {
     setMarcaFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busquedaCodigo, busquedaDescripcion, val, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, 1)
+    aplicarFiltros(busquedaCodigo, busquedaDescripcion, val, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, 1)
   }
 
   const handleCategoria = (val: string) => {
     setCategoriaFiltro(val)
     setRubroFiltro('')
     setPaginaActual(1)
-    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, val, '', vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, 1)
+    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, val, '', vehiculoFiltro, modeloAutoFiltro, 1)
   }
 
   const handleRubro = (val: string) => {
     setRubroFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, val, vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, 1)
+    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, val, vehiculoFiltro, modeloAutoFiltro, 1)
   }
 
   const handleVehiculo = (val: string) => {
     setVehiculoFiltro(val)
     setModeloAutoFiltro('')
     setPaginaActual(1)
-    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, val, '', ofertaFiltro, 1)
+    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, val, '', 1)
   }
 
   const handleModeloAuto = (val: string) => {
     setModeloAutoFiltro(val)
     setPaginaActual(1)
-    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, val, ofertaFiltro, 1)
+    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, val, 1)
   }
 
   const irAInicio = () => {
@@ -541,13 +537,6 @@ export default function Catalogo({ modo }: { modo: Modo }) {
   }
 
   const irACatalogo = () => {
-    catalogoRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  const irAOfertas = () => {
-    setOfertaFiltro(true)
-    setPaginaActual(1)
-    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, true, 1)
     catalogoRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
@@ -560,16 +549,15 @@ export default function Catalogo({ modo }: { modo: Modo }) {
     setRubroFiltro('')
     setVehiculoFiltro('')
     setModeloAutoFiltro('')
-    setOfertaFiltro(false)
     setPaginaActual(1)
-    aplicarFiltros('', '', '', '', '', '', '', false, 1)
+    aplicarFiltros('', '', '', '', '', '', '', 1)
   }
 
-  const hayFiltrosActivos = busquedaCodigo !== '' || busquedaDescripcion !== '' || marcaFiltro !== '' || categoriaFiltro !== '' || rubroFiltro !== '' || vehiculoFiltro !== '' || modeloAutoFiltro !== '' || ofertaFiltro
+  const hayFiltrosActivos = busquedaCodigo !== '' || busquedaDescripcion !== '' || marcaFiltro !== '' || categoriaFiltro !== '' || rubroFiltro !== '' || vehiculoFiltro !== '' || modeloAutoFiltro !== ''
 
   const cambiarPagina = (nuevaPagina: number) => {
     setPaginaActual(nuevaPagina)
-    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, ofertaFiltro, nuevaPagina)
+    aplicarFiltros(busquedaCodigo, busquedaDescripcion, marcaFiltro, categoriaFiltro, rubroFiltro, vehiculoFiltro, modeloAutoFiltro, nuevaPagina)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -841,12 +829,6 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 </button>
                 <button onClick={irACatalogo} className="text-[11px] uppercase tracking-[0.15em] text-white/80 hover:text-white transition-colors">
                   Catálogo
-                </button>
-                <button
-                  onClick={irAOfertas}
-                  className={`text-[11px] uppercase tracking-[0.15em] transition-colors ${ofertaFiltro ? 'text-white' : 'text-white/80 hover:text-white'}`}
-                >
-                  Ofertas
                 </button>
               </nav>
 
