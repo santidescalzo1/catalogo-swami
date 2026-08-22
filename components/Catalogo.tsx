@@ -1274,15 +1274,15 @@ export default function Catalogo({ modo }: { modo: Modo }) {
               </button>
 
               <div className="mb-8 mt-4 md:mt-0">
-                <div className="flex gap-4 mb-6">
-                  <span className="px-3 py-1 bg-brand-500/10 border border-brand-500/20 text-[10px] font-mono text-brand-600 tracking-wider">
-                    CÓD: {articuloSeleccionado.codigo}
-                  </span>
+                <div className="flex flex-wrap gap-4 mb-6">
                   {articuloSeleccionado.codigo_proveedor && !proveedoresSinRef.includes(articuloSeleccionado.id_proveedor ?? -1) && (
-                    <span className="px-3 py-1 bg-zinc-100 border border-zinc-300 text-[10px] font-mono text-zinc-500 tracking-wider">
-                      REF: {articuloSeleccionado.codigo_proveedor}
+                    <span className="px-3 py-1 bg-brand-500/10 border border-brand-500/20 text-[10px] font-mono text-brand-600 tracking-wider">
+                      CÓDIGO ORIGINAL: {articuloSeleccionado.codigo_proveedor}
                     </span>
                   )}
+                  <span className="px-3 py-1 bg-zinc-100 border border-zinc-300 text-[10px] font-mono text-zinc-500 tracking-wider">
+                    CÓDIGO INTERNO: {articuloSeleccionado.codigo}
+                  </span>
                 </div>
 
                 <h2 className="text-2xl font-light text-zinc-900 leading-snug mb-4">
