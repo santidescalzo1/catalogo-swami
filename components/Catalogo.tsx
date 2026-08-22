@@ -617,7 +617,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
   const totalPaginas = Math.ceil(totalRegistros / porPagina)
 
   return (
-    <main className="relative min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-orange-500/30 overflow-x-hidden">
+    <main className="relative min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-brand-500/30 overflow-x-hidden">
 
       {/* SELECTOR DE MARCA: pantalla grande la primera vez que se entra al
           sitio (sin eleccion guardada en localStorage). Solo se monta en
@@ -625,28 +625,28 @@ export default function Catalogo({ modo }: { modo: Modo }) {
       {mostrarSelector && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-zinc-950/95 backdrop-blur-sm">
           <div className="max-w-2xl w-full">
-            <p className="text-center text-[11px] text-orange-400 tracking-[0.3em] uppercase mb-3">Elegí tu catálogo</p>
-            <h2 className="text-center text-2xl sm:text-3xl font-light text-white mb-10">¿Qué estás buscando hoy?</h2>
+            <p className="text-center text-[11px] text-brand-400 tracking-[0.3em] uppercase mb-3">Elegí tu catálogo</p>
+            <h2 className="font-display text-center text-3xl sm:text-4xl font-semibold text-white mb-10">¿Qué estás buscando hoy?</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <button
                 onClick={() => elegirMarca('swami')}
-                className="group border-2 border-white/20 hover:border-orange-500 bg-zinc-900 p-8 flex flex-col items-center gap-4 transition-colors"
+                className="group border-2 border-white/20 hover:border-brand-500 bg-zinc-900 p-8 flex flex-col items-center gap-4 transition-colors"
               >
-                <span className="w-16 h-16 bg-black flex items-center justify-center overflow-hidden ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-orange-500 transition-all">
+                <span className="w-16 h-16 rounded-sm bg-zinc-950/60 flex items-center justify-center overflow-hidden ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-brand-500 transition-all">
                   <Image src="/logo.png" alt="Swami" width={64} height={64} priority className="w-full h-full object-contain p-1.5" />
                 </span>
                 <div className="text-center">
-                  <span className="block text-white text-lg font-light tracking-[0.15em] uppercase">Swami Autopartes</span>
+                  <span className="font-display block text-white text-lg font-semibold tracking-[0.15em] uppercase">Swami Autopartes</span>
                   <span className="block text-zinc-400 text-xs mt-1">Catálogo completo de repuestos</span>
                 </div>
               </button>
               <button
                 onClick={() => elegirMarca('radiacor')}
-                className="group border-2 border-white/20 hover:border-orange-500 bg-zinc-900 p-8 flex flex-col items-center gap-4 transition-colors"
+                className="group border-2 border-white/20 hover:border-brand-500 bg-zinc-900 p-8 flex flex-col items-center gap-4 transition-colors"
               >
-                <span className="w-16 h-16 bg-black flex items-center justify-center text-white font-black text-3xl ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-orange-500 transition-all">R</span>
+                <span className="w-16 h-16 rounded-sm bg-zinc-950/60 flex items-center justify-center text-brand-300 font-display font-bold text-3xl ring-1 ring-white/20 group-hover:ring-2 group-hover:ring-brand-500 transition-all">R</span>
                 <div className="text-center">
-                  <span className="block text-white text-lg font-light tracking-[0.15em] uppercase">Radiacor</span>
+                  <span className="font-display block text-white text-lg font-semibold tracking-[0.15em] uppercase">Radiacor</span>
                   <span className="block text-zinc-400 text-xs mt-1">Radiadores multimarca</span>
                 </div>
               </button>
@@ -671,7 +671,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
-            <span className="absolute top-4 left-4 bg-orange-600 text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-sm">
+            <span className="absolute top-4 left-4 bg-brand-600 text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-sm">
               Oferta
             </span>
 
@@ -715,19 +715,21 @@ export default function Catalogo({ modo }: { modo: Modo }) {
         </div>
       )}
 
-      {/* BARRA DE ANUNCIOS: el tono mas oscuro de la banda superior, hace de
-          "sombra" que precede al degrade del header. */}
-      <div className="bg-orange-800">
-        <p className="max-w-7xl mx-auto px-6 py-2 text-center text-[10px] sm:text-[11px] text-orange-100 tracking-wide">
-          Envíos a todo el país <span className="text-orange-300/50 mx-2">·</span> Cotización directa por WhatsApp
+      {/* BARRA DE ANUNCIOS: gris carbón, precede al header — el acento de
+          marca queda para la linea fina que abre la franja de abajo. */}
+      <div className="bg-zinc-950">
+        <p className="max-w-7xl mx-auto px-6 py-2 text-center text-[10px] sm:text-[11px] text-zinc-300 tracking-wide">
+          Envíos a todo el país <span className="text-brand-400/70 mx-2">·</span> Cotización directa por WhatsApp
         </p>
       </div>
 
       {/* HEADER */}
       <header className="sticky top-0 z-20 overflow-hidden shadow-sm">
-        {/* Franja de marca: degrade naranja solido, la banda de color mas
-            fuerte del sitio. */}
-        <div className="relative bg-gradient-to-br from-orange-700 to-orange-600">
+        {/* Franja de marca: carbón solido con una linea fina de acento en
+            naranja quemado arriba — hace de contrapunto al mismo acento
+            que cierra el footer, sin cubrir toda la banda de color fuerte. */}
+        <div className="relative bg-zinc-900">
+          <div aria-hidden className="h-[3px] bg-gradient-to-r from-brand-700 via-brand-400 to-brand-700" />
           {/* Plano de motor: grilla de plano técnico que se apaga hacia los
               bordes — conecta con el motor animado de abajo. */}
           <div
@@ -781,14 +783,21 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                     )}
                   </button>
 
-                  {/* Placa Swami: siempre activa, opaca cuando estas en Radiacor */}
+                  {/* Placa Swami: siempre activa, opaca cuando estas en Radiacor.
+                      El logo (jpg con fondo negro solido, sin transparencia)
+                      va encerrado en una placa oscura con anillo — asi el
+                      fondo negro se lee como parte del badge, no como un
+                      recorte que choca contra el header. Mismo tratamiento
+                      que usa el selector de marca al entrar al sitio. */}
                   <Link href="/" className={`flex items-center gap-3 transition-opacity ${modo === 'swami' ? '' : 'opacity-60 hover:opacity-100'}`}>
-                    <Image src="/logo.png" alt="Swami Logo" width={500} height={500} priority className="h-12 md:h-14 w-auto object-contain" />
+                    <span className="w-11 h-11 md:h-14 md:w-14 rounded-sm bg-zinc-950/60 ring-1 ring-white/15 flex items-center justify-center overflow-hidden shrink-0">
+                      <Image src="/logo.png" alt="Swami Logo" width={500} height={500} priority className="w-full h-full object-contain p-1.5" />
+                    </span>
                     <div className="hidden md:flex flex-col justify-center">
-                      <h1 className="text-lg font-light tracking-[0.2em] text-white uppercase leading-tight">
+                      <h1 className="font-display text-xl font-semibold tracking-[0.15em] text-white uppercase leading-tight">
                         Swami Autopartes
                       </h1>
-                      <span className="text-[10px] text-orange-100 tracking-[0.3em] uppercase opacity-90">
+                      <span className="text-[10px] text-brand-200 tracking-[0.3em] uppercase opacity-90">
                         Distribuidor Mayorista
                       </span>
                     </div>
@@ -796,14 +805,16 @@ export default function Catalogo({ modo }: { modo: Modo }) {
 
                   <div className="hidden md:block w-px h-10 bg-white/25" />
 
-                  {/* Placa Radiacor: mismo tratamiento, opaca cuando estas en Swami */}
+                  {/* Placa Radiacor: mismo badge que Swami (mismo tamaño, radio
+                      y anillo) para que las dos marcas se sientan una familia
+                      visual, aunque Radiacor todavia no tenga logo propio. */}
                   <Link href="/radiacor" className={`flex items-center gap-3 transition-opacity ${modo === 'radiacor' ? '' : 'opacity-60 hover:opacity-100'}`}>
-                    <span className="w-11 h-11 md:h-14 md:w-14 bg-black flex items-center justify-center text-white font-black text-xl md:text-2xl shrink-0">R</span>
+                    <span className="w-11 h-11 md:h-14 md:w-14 rounded-sm bg-zinc-950/60 ring-1 ring-white/15 flex items-center justify-center text-brand-300 font-display font-bold text-xl md:text-2xl shrink-0">R</span>
                     <div className="hidden md:flex flex-col justify-center">
-                      <span className="text-lg font-light tracking-[0.2em] text-white uppercase leading-tight">
+                      <span className="font-display text-xl font-semibold tracking-[0.15em] text-white uppercase leading-tight">
                         Radiacor
                       </span>
-                      <span className="text-[10px] text-orange-100 tracking-[0.3em] uppercase opacity-90">
+                      <span className="text-[10px] text-brand-200 tracking-[0.3em] uppercase opacity-90">
                         Radiadores Multimarca
                       </span>
                     </div>
@@ -816,7 +827,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                   {carrito.length > 0 && (
-                    <span className="absolute top-0 right-0 bg-white text-orange-700 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                    <span className="absolute top-0 right-0 bg-white text-brand-700 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                       {carrito.reduce((acc, item) => acc + item.cantidad, 0)}
                     </span>
                   )}
@@ -847,7 +858,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 >
                   <svg className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                   {carrito.length > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-white text-orange-700 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                    <span className="absolute -top-2 -right-2 bg-white text-brand-700 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
                       {carrito.reduce((acc, item) => acc + item.cantidad, 0)}
                     </span>
                   )}
@@ -871,7 +882,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 placeholder="Propio o de proveedor..."
                 value={busquedaCodigo}
                 onChange={(e) => handleBusquedaCodigo(e.target.value)}
-                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 w-full transition-all placeholder:text-zinc-400 placeholder:normal-case placeholder:tracking-normal uppercase tracking-wider text-[11px]"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 w-full transition-all placeholder:text-zinc-400 placeholder:normal-case placeholder:tracking-normal uppercase tracking-wider text-[11px]"
               />
             </div>
 
@@ -882,7 +893,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 placeholder="Qué repuesto buscás..."
                 value={busquedaDescripcion}
                 onChange={(e) => handleBusquedaDescripcion(e.target.value)}
-                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 w-full transition-all placeholder:text-zinc-400 placeholder:normal-case placeholder:tracking-normal uppercase tracking-wider text-[11px]"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 w-full transition-all placeholder:text-zinc-400 placeholder:normal-case placeholder:tracking-normal uppercase tracking-wider text-[11px]"
               />
             </div>
 
@@ -891,7 +902,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
               <select
                 value={marcaFiltro}
                 onChange={(e) => handleMarca(e.target.value)}
-                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-brand-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {marcas.filter(m => m.id !== 0).map(m => (
@@ -907,7 +918,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                   <select
                     value={categoriaFiltro}
                     onChange={(e) => handleCategoria(e.target.value)}
-                    className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                    className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-brand-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
                   >
                     <option value="">Todos</option>
                     {categoriasGenerales.map(c => (
@@ -921,7 +932,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                   <select
                     value={rubroFiltro}
                     onChange={(e) => handleRubro(e.target.value)}
-                    className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                    className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-brand-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
                   >
                     <option value="">Todos</option>
                     {rubros
@@ -940,7 +951,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
               <select
                 value={vehiculoFiltro}
                 onChange={(e) => handleVehiculo(e.target.value)}
-                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-brand-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px]"
               >
                 <option value="">Todos</option>
                 {marcasAuto.map(m => (
@@ -955,7 +966,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 value={modeloAutoFiltro}
                 onChange={(e) => handleModeloAuto(e.target.value)}
                 disabled={!vehiculoFiltro}
-                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-orange-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="bg-white border border-zinc-400 text-zinc-800 text-sm px-4 py-2.5 rounded-sm focus:outline-none focus:border-brand-500/50 appearance-none cursor-pointer w-full transition-all uppercase tracking-wider text-[11px] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <option value="">Todos</option>
                 {modelosAuto
@@ -969,7 +980,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
             <button
               onClick={limpiarFiltros}
               disabled={!hayFiltrosActivos}
-              className="text-[11px] uppercase tracking-wider text-zinc-600 border border-zinc-400 px-4 py-2.5 hover:border-orange-500 hover:text-orange-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-zinc-400 disabled:hover:text-zinc-500 shrink-0 self-end"
+              className="text-[11px] uppercase tracking-wider text-zinc-600 border border-zinc-400 px-4 py-2.5 hover:border-brand-500 hover:text-brand-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-zinc-400 disabled:hover:text-zinc-500 shrink-0 self-end"
             >
               Limpiar Filtros
             </button>
@@ -978,12 +989,13 @@ export default function Catalogo({ modo }: { modo: Modo }) {
         </div>
       </header>
 
-      {/* FRANJA DE CONFIANZA: banda naranja clara, tono intermedio entre el
-          header solido y el blanco del catalogo. */}
-      <div className="border-b border-orange-300 bg-orange-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-[10px] uppercase tracking-[0.15em] font-medium text-orange-900">
+      {/* FRANJA DE CONFIANZA: tono neutro apenas tibio, intermedio entre el
+          header solido y el blanco del catalogo — el color queda solo en
+          los iconos, no en toda la banda. */}
+      <div className="border-b border-brand-200 bg-brand-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-[10px] uppercase tracking-[0.15em] font-medium text-zinc-600">
           <span className="flex items-center gap-2">
-            <svg className="w-3.5 h-3.5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            <svg className="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
             Envíos a todo el país
           </span>
           <span className="flex items-center gap-2">
@@ -991,7 +1003,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
             Cotización directa por WhatsApp
           </span>
           <span className="flex items-center gap-2">
-            <svg className="w-3.5 h-3.5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+            <svg className="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
             Stock real, actualizado
           </span>
           <span className="flex items-center gap-2">
@@ -1041,7 +1053,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                   key={b.id}
                   onClick={() => setIndiceBanner(i)}
                   aria-label={`Ver banner ${i + 1}`}
-                  className={`w-1.5 h-1.5 rounded-full transition-colors ${i === indiceBanner ? 'bg-orange-500' : 'bg-zinc-200'}`}
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${i === indiceBanner ? 'bg-brand-500' : 'bg-zinc-200'}`}
                 />
               ))}
             </div>
@@ -1051,7 +1063,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
 
       {/* GRILLA DE PRODUCTOS */}
       <section ref={catalogoRef} className="max-w-7xl mx-auto px-6 py-12 scroll-mt-24">
-        <div className="flex justify-between items-center mb-8 bg-orange-600 text-white text-[10px] uppercase tracking-[0.2em] px-4 py-2.5">
+        <div className="flex justify-between items-center mb-8 bg-brand-600 text-white text-[10px] uppercase tracking-[0.2em] px-4 py-2.5">
           <span className="font-medium">{modo === 'radiacor' ? 'Inventario Radiacor' : 'Inventario Swami'}</span>
           <div className="flex items-center gap-6">
             <span>{totalRegistros} repuestos</span>
@@ -1059,14 +1071,14 @@ export default function Catalogo({ modo }: { modo: Modo }) {
               <button
                 onClick={() => setVistaLista(false)}
                 aria-label="Ver en grilla"
-                className={`p-2 transition-colors ${!vistaLista ? 'bg-white text-orange-600' : 'text-white/70 hover:text-white'}`}
+                className={`p-2 transition-colors ${!vistaLista ? 'bg-white text-brand-600' : 'text-white/70 hover:text-white'}`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" /></svg>
               </button>
               <button
                 onClick={() => setVistaLista(true)}
                 aria-label="Ver en lista"
-                className={`p-2 transition-colors ${vistaLista ? 'bg-white text-orange-600' : 'text-white/70 hover:text-white'}`}
+                className={`p-2 transition-colors ${vistaLista ? 'bg-white text-brand-600' : 'text-white/70 hover:text-white'}`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
               </button>
@@ -1098,7 +1110,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
             <div className="overflow-x-auto border border-zinc-300 bg-white shadow-sm">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="bg-orange-50 border-b-2 border-orange-300 text-[10px] uppercase tracking-[0.2em] text-orange-900">
+                  <tr className="bg-brand-50 border-b-2 border-brand-300 text-[10px] uppercase tracking-[0.2em] text-brand-900">
                     <th className="text-left font-semibold px-4 py-3">Código Original</th>
                     <th className="text-left font-semibold px-4 py-3">Código Interno</th>
                     <th className="text-left font-semibold px-4 py-3">Descripción</th>
@@ -1113,9 +1125,9 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                     <tr
                       key={item.id}
                       onClick={() => setArticuloSeleccionado(item)}
-                      className="border-b border-zinc-300 last:border-b-0 odd:bg-white even:bg-zinc-50 hover:bg-orange-50 cursor-pointer transition-colors"
+                      className="border-b border-zinc-300 last:border-b-0 odd:bg-white even:bg-zinc-50 hover:bg-brand-50 cursor-pointer transition-colors"
                     >
-                      <td className="px-4 py-3 text-orange-600 font-mono text-[11px] whitespace-nowrap">
+                      <td className="px-4 py-3 text-brand-600 font-mono text-[11px] whitespace-nowrap">
                         {item.codigo_proveedor && !proveedoresSinRef.includes(item.id_proveedor ?? -1) ? item.codigo_proveedor : '—'}
                       </td>
                       <td className="px-4 py-3 text-zinc-500 font-mono text-[11px] whitespace-nowrap">{item.codigo}</td>
@@ -1134,13 +1146,13 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                           <button
                             onClick={(e) => { e.stopPropagation(); setArticuloSeleccionado(item) }}
                             aria-label="Ver detalle"
-                            className="p-2 text-zinc-500 hover:text-orange-500 transition-colors"
+                            className="p-2 text-zinc-500 hover:text-brand-500 transition-colors"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                           </button>
                           <button
                             onClick={(e) => agregarAlCarrito(item, e)}
-                            className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-semibold text-white bg-orange-600 hover:bg-orange-700 px-3 py-2 transition-all whitespace-nowrap"
+                            className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 transition-all whitespace-nowrap"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                             Agregar
@@ -1158,11 +1170,11 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 <article
                   key={item.id}
                   onClick={() => setArticuloSeleccionado(item)}
-                  className="group relative border border-zinc-300 bg-white p-5 shadow-sm hover:border-orange-500/30 hover:shadow-md hover:shadow-orange-500/10 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                  className="group relative border border-zinc-300 bg-white p-5 shadow-sm hover:border-brand-500/30 hover:shadow-md hover:shadow-brand-500/10 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
                 >
                   <div>
                     {/* Contenedor de Imagen con URL Dinámica Supabase */}
-                    <div className="relative aspect-square w-full bg-zinc-50 border border-zinc-300/50 mb-5 flex items-center justify-center overflow-hidden group-hover:border-orange-500/20 transition-colors">
+                    <div className="relative aspect-square w-full bg-zinc-50 border border-zinc-300/50 mb-5 flex items-center justify-center overflow-hidden group-hover:border-brand-500/20 transition-colors">
                       <Image
                         src={`${SUPABASE_STORAGE_URL}/${item.codigo}.jpg`}
                         alt={descripcionMostrada(item)}
@@ -1176,12 +1188,12 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                         }}
                       />
                       <div className="hidden text-center flex-col items-center gap-4 w-full h-full justify-center">
-                        <svg className="w-8 h-8 text-zinc-200 group-hover:text-orange-500/20 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        <svg className="w-8 h-8 text-zinc-200 group-hover:text-brand-500/20 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                       </div>
                     </div>
 
                     <div className="flex justify-between items-start gap-2 mb-3">
-                      <span className="text-[10px] text-orange-600 font-mono tracking-wider">
+                      <span className="text-[10px] text-brand-600 font-mono tracking-wider">
                         {item.codigo}
                       </span>
                       <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-400 truncate max-w-[100px]">
@@ -1195,12 +1207,12 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                   </div>
 
                   <div className="flex items-center justify-between border-t border-zinc-300/50 pt-4 mt-4">
-                    <span className="text-lg font-light text-zinc-900 tracking-wide group-hover:text-orange-600 transition-colors">
+                    <span className="text-lg font-light text-zinc-900 tracking-wide group-hover:text-brand-600 transition-colors">
                       ${item.precio_1.toLocaleString('es-AR')}
                     </span>
                     <button
                       onClick={(e) => agregarAlCarrito(item, e)}
-                      className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-semibold text-white bg-orange-600 hover:bg-orange-700 px-4 py-2 transition-all shrink-0"
+                      className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] font-semibold text-white bg-brand-600 hover:bg-brand-700 px-4 py-2 transition-all shrink-0"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                       Agregar
@@ -1217,7 +1229,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 <button
                   onClick={() => cambiarPagina(paginaActual - 1)}
                   disabled={paginaActual === 1}
-                  className="px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] bg-transparent border border-zinc-300 text-zinc-600 hover:border-orange-500/50 hover:text-orange-600 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                  className="px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] bg-transparent border border-zinc-300 text-zinc-600 hover:border-brand-500/50 hover:text-brand-600 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
                 >
                   Anterior
                 </button>
@@ -1229,7 +1241,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 <button
                   onClick={() => cambiarPagina(paginaActual + 1)}
                   disabled={paginaActual === totalPaginas}
-                  className="px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] bg-transparent border border-zinc-300 text-zinc-600 hover:border-orange-500/50 hover:text-orange-600 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                  className="px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] bg-transparent border border-zinc-300 text-zinc-600 hover:border-brand-500/50 hover:text-brand-600 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
                 >
                   Siguiente
                 </button>
@@ -1274,14 +1286,14 @@ export default function Catalogo({ modo }: { modo: Modo }) {
             <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col overflow-y-auto">
               <button
                 onClick={() => setArticuloSeleccionado(null)}
-                className="absolute top-4 right-4 text-zinc-500 hover:text-orange-500 transition-colors p-2"
+                className="absolute top-4 right-4 text-zinc-500 hover:text-brand-500 transition-colors p-2"
               >
                 ✕
               </button>
 
               <div className="mb-8 mt-4 md:mt-0">
                 <div className="flex gap-4 mb-6">
-                  <span className="px-3 py-1 bg-orange-500/10 border border-orange-500/20 text-[10px] font-mono text-orange-600 tracking-wider">
+                  <span className="px-3 py-1 bg-brand-500/10 border border-brand-500/20 text-[10px] font-mono text-brand-600 tracking-wider">
                     CÓD: {articuloSeleccionado.codigo}
                   </span>
                   {articuloSeleccionado.codigo_proveedor && !proveedoresSinRef.includes(articuloSeleccionado.id_proveedor ?? -1) && (
@@ -1319,7 +1331,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
 
               <div className="mt-auto pt-8 border-t border-zinc-300 flex items-center justify-between">
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-orange-600 uppercase tracking-widest mb-1">Precio Mayorista</span>
+                  <span className="text-[10px] text-brand-600 uppercase tracking-widest mb-1">Precio Mayorista</span>
                   <span className="text-3xl font-light text-zinc-900 tracking-wide">
                     ${articuloSeleccionado.precio_1.toLocaleString('es-AR')}
                   </span>
@@ -1327,7 +1339,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
 
                 <button
                   onClick={() => agregarAlCarrito(articuloSeleccionado)}
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 text-xs uppercase tracking-[0.2em] font-medium transition-colors"
+                  className="bg-brand-600 hover:bg-brand-700 text-white px-8 py-4 text-xs uppercase tracking-[0.2em] font-medium transition-colors"
                 >
                   Agregar
                 </button>
@@ -1346,7 +1358,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
               <h2 className="text-sm font-light tracking-[0.3em] text-zinc-900 uppercase">
                 {clienteSesion || adminSesion ? 'Mi cuenta' : 'Ingresar'}
               </h2>
-              <button onClick={() => setMostrarLogin(false)} className="text-zinc-400 hover:text-orange-500 transition-colors p-2">✕</button>
+              <button onClick={() => setMostrarLogin(false)} className="text-zinc-400 hover:text-brand-500 transition-colors p-2">✕</button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-8">
@@ -1356,13 +1368,13 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                     Hola, <span className="text-zinc-900">{clienteSesion.nombre}</span>.
                   </p>
                   {clienteSesion.descuento_pct > 0 && (
-                    <p className="text-xs text-orange-600 uppercase tracking-widest">
+                    <p className="text-xs text-brand-600 uppercase tracking-widest">
                       Descuento asignado: {clienteSesion.descuento_pct}%
                     </p>
                   )}
                   <button
                     onClick={handleLogoutSesion}
-                    className="w-full border border-zinc-300 text-zinc-600 py-3 text-xs uppercase tracking-widest hover:border-orange-500/50 hover:text-orange-600 transition-colors"
+                    className="w-full border border-zinc-300 text-zinc-600 py-3 text-xs uppercase tracking-widest hover:border-brand-500/50 hover:text-brand-600 transition-colors"
                   >
                     Cerrar sesión
                   </button>
@@ -1374,13 +1386,13 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                   </p>
                   <Link
                     href="/admin"
-                    className="block text-center w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors"
+                    className="block text-center w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors"
                   >
                     Ir al panel administrador
                   </Link>
                   <button
                     onClick={handleLogoutSesion}
-                    className="w-full border border-zinc-300 text-zinc-600 py-3 text-xs uppercase tracking-widest hover:border-orange-500/50 hover:text-orange-600 transition-colors"
+                    className="w-full border border-zinc-300 text-zinc-600 py-3 text-xs uppercase tracking-widest hover:border-brand-500/50 hover:text-brand-600 transition-colors"
                   >
                     Cerrar sesión
                   </button>
@@ -1397,7 +1409,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                       required
                       value={emailLogin}
                       onChange={(e) => setEmailLogin(e.target.value)}
-                      className="w-full bg-white border border-zinc-300 rounded-sm px-4 py-3 text-sm text-zinc-800 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                      className="w-full bg-white border border-zinc-300 rounded-sm px-4 py-3 text-sm text-zinc-800 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/20 transition-all"
                     />
                   </div>
                   <div>
@@ -1407,14 +1419,14 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                       required
                       value={passwordLogin}
                       onChange={(e) => setPasswordLogin(e.target.value)}
-                      className="w-full bg-white border border-zinc-300 rounded-sm px-4 py-3 text-sm text-zinc-800 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                      className="w-full bg-white border border-zinc-300 rounded-sm px-4 py-3 text-sm text-zinc-800 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/20 transition-all"
                     />
                   </div>
                   {errorLogin && <p className="text-xs text-red-500">{errorLogin}</p>}
                   <button
                     type="submit"
                     disabled={cargandoLogin}
-                    className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed"
+                    className="w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium uppercase tracking-[0.2em] py-4 transition-colors disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed"
                   >
                     {cargandoLogin ? 'Ingresando...' : 'Ingresar'}
                   </button>
@@ -1432,7 +1444,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
           <div className="fixed top-0 right-0 h-full w-full max-w-md bg-zinc-50 border-l border-zinc-300 z-50 flex flex-col shadow-2xl">
             <div className="p-8 border-b border-zinc-300 flex justify-between items-center bg-zinc-50/50">
               <h2 className="text-sm font-light tracking-[0.3em] text-zinc-900 uppercase">Tu Cotización</h2>
-              <button onClick={() => setMostrarCarrito(false)} className="text-zinc-400 hover:text-orange-500 transition-colors p-2">✕</button>
+              <button onClick={() => setMostrarCarrito(false)} className="text-zinc-400 hover:text-brand-500 transition-colors p-2">✕</button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -1440,10 +1452,10 @@ export default function Catalogo({ modo }: { modo: Modo }) {
                 <div className="text-center text-zinc-400 text-[10px] mt-10 uppercase tracking-[0.2em]">La lista está vacía</div>
               ) : (
                 carrito.map(item => (
-                  <div key={item.id} className="flex flex-col gap-4 p-5 bg-zinc-50 border border-zinc-300/50 hover:border-orange-500/30 transition-colors">
+                  <div key={item.id} className="flex flex-col gap-4 p-5 bg-zinc-50 border border-zinc-300/50 hover:border-brand-500/30 transition-colors">
                     <div className="flex justify-between items-start">
                       <div className="pr-4">
-                        <span className="text-[10px] text-orange-600 font-mono block mb-2">{item.codigo}</span>
+                        <span className="text-[10px] text-brand-600 font-mono block mb-2">{item.codigo}</span>
                         <p className="text-sm font-light text-zinc-900 leading-relaxed">{descripcionMostrada(item)}</p>
                       </div>
                       <button onClick={() => removerDelCarrito(item.id)} className="text-zinc-300 hover:text-red-500 transition-colors">
@@ -1453,9 +1465,9 @@ export default function Catalogo({ modo }: { modo: Modo }) {
 
                     <div className="flex justify-between items-center mt-2 pt-4 border-t border-zinc-300">
                       <div className="flex items-center gap-4 border border-zinc-300 p-1">
-                        <button onClick={() => cambiarCantidad(item.id, -1)} className="px-3 text-zinc-500 hover:text-orange-500 transition-colors">-</button>
+                        <button onClick={() => cambiarCantidad(item.id, -1)} className="px-3 text-zinc-500 hover:text-brand-500 transition-colors">-</button>
                         <span className="text-xs font-mono w-4 text-center text-zinc-900">{item.cantidad}</span>
-                        <button onClick={() => cambiarCantidad(item.id, 1)} className="px-3 text-zinc-500 hover:text-orange-500 transition-colors">+</button>
+                        <button onClick={() => cambiarCantidad(item.id, 1)} className="px-3 text-zinc-500 hover:text-brand-500 transition-colors">+</button>
                       </div>
                       <span className="text-sm font-light text-zinc-900 tracking-wide">${(item.precio_1 * item.cantidad).toLocaleString('es-AR')}</span>
                     </div>
@@ -1467,13 +1479,13 @@ export default function Catalogo({ modo }: { modo: Modo }) {
             <div className="p-8 bg-zinc-50 border-t border-zinc-300">
               <div className="flex justify-between items-end mb-8">
                 <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Total Estimado</span>
-                <span className="text-2xl font-light text-orange-600 tracking-wide">${totalCarrito.toLocaleString('es-AR')}</span>
+                <span className="text-2xl font-light text-brand-600 tracking-wide">${totalCarrito.toLocaleString('es-AR')}</span>
               </div>
 
               <button
                 onClick={enviarWhatsApp}
                 disabled={carrito.length === 0}
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium uppercase tracking-[0.2em] py-5 transition-colors flex items-center justify-center gap-2 disabled:bg-zinc-100 disabled:text-zinc-300 disabled:cursor-not-allowed"
+                className="w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium uppercase tracking-[0.2em] py-5 transition-colors flex items-center justify-center gap-2 disabled:bg-zinc-100 disabled:text-zinc-300 disabled:cursor-not-allowed"
               >
                 Solicitar Cotización
               </button>
@@ -1482,11 +1494,10 @@ export default function Catalogo({ modo }: { modo: Modo }) {
         </>
       )}
 
-      {/* FOOTER: banda oscura, cierra el sitio con el mismo peso de color
-          con el que abre el header (naranja fuerte arriba, carbon con
-          acento naranja abajo). */}
+      {/* FOOTER: banda carbón que cierra el sitio con la misma linea de
+          acento naranja quemado que abre el header. */}
       <footer className="relative bg-zinc-900 mt-8">
-        <div aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-orange-600 via-orange-400 to-orange-600" />
+        <div aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-brand-600 via-brand-400 to-brand-600" />
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <span className="text-[10px] text-zinc-400 uppercase tracking-[0.2em]">
             Swami Distribuidora Mayorista {modo === 'radiacor' && '— Radiacor'}
@@ -1494,7 +1505,7 @@ export default function Catalogo({ modo }: { modo: Modo }) {
           <Link
             href="/admin"
             aria-label="Acceso administrador"
-            className="text-zinc-500 hover:text-orange-400 transition-colors"
+            className="text-zinc-500 hover:text-brand-400 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15a3 3 0 100-6 3 3 0 000 6z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
           </Link>

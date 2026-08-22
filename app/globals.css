@@ -10,12 +10,28 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-barlow-condensed);
+
+  /* Paleta de marca: oxido/terracota apagado en vez del naranja vivido
+     de Tailwind por defecto — mismos 10 pasos de intensidad, para poder
+     reemplazar clases orange-* por brand-* uno a uno sin rediseñar cada
+     componente. */
+  --color-brand-50: #fbf1ea;
+  --color-brand-100: #f5dfce;
+  --color-brand-200: #eabe9e;
+  --color-brand-300: #db9a6e;
+  --color-brand-400: #c97a48;
+  --color-brand-500: #b85c28;
+  --color-brand-600: #a34a1a;
+  --color-brand-700: #873d16;
+  --color-brand-800: #6b3012;
+  --color-brand-900: #4a210c;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 @media (prefers-reduced-motion: reduce) {

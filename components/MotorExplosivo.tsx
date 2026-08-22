@@ -131,12 +131,12 @@ export default function MotorExplosivo() {
   return (
     <section
       ref={seccionRef}
-      className="relative border-y-2 border-orange-300 bg-orange-50 overflow-hidden"
+      className="relative border-y-2 border-brand-300 bg-brand-50 overflow-hidden"
     >
       <div className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
-          <span className="text-[10px] text-orange-700 font-semibold tracking-[0.3em] uppercase">Ingeniería a la vista</span>
-          <h2 className="text-3xl sm:text-4xl font-light text-zinc-900 leading-tight mt-3 mb-5">
+          <span className="text-[10px] text-brand-700 font-semibold tracking-[0.3em] uppercase">Ingeniería a la vista</span>
+          <h2 className="font-display text-4xl sm:text-5xl font-semibold text-zinc-900 leading-tight mt-3 mb-5">
             Motor por motor,<br />pieza por pieza.
           </h2>
           <p className="text-sm text-zinc-600 leading-relaxed max-w-md">
@@ -145,7 +145,7 @@ export default function MotorExplosivo() {
           </p>
           <button
             onClick={() => seccionRef.current?.previousElementSibling?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-            className="mt-8 text-[11px] uppercase tracking-[0.2em] text-orange-700 bg-white hover:bg-orange-600 hover:text-white border border-orange-400 px-5 py-3 transition-colors"
+            className="mt-8 text-[11px] uppercase tracking-[0.2em] text-brand-700 bg-white hover:bg-brand-600 hover:text-white border border-brand-400 px-5 py-3 transition-colors"
           >
             Volver al catálogo ↑
           </button>
@@ -170,7 +170,7 @@ export default function MotorExplosivo() {
             {piezas.map((pieza) => (
               <g
                 key={pieza.id}
-                className={`motor-pieza ${pieza.id === 'llave' || pieza.id.startsWith('bulon') ? 'text-orange-600' : 'text-zinc-500'}`}
+                className={`motor-pieza ${pieza.id === 'llave' || pieza.id.startsWith('bulon') ? 'text-brand-600' : 'text-zinc-500'}`}
                 style={{
                   transform: armado ? pieza.assembled : pieza.exploded,
                   transitionProperty: 'transform',
